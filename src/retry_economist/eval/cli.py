@@ -134,6 +134,11 @@ def _rate(value: float | None) -> str:
     return "n/a" if value is None else _pct(value)
 
 
+def _days(value: float | None) -> str:
+    """None means nothing recovered, which is not the same as recovering in 0 days."""
+    return "n/a" if value is None else f"{value:.2f}"
+
+
 def _ci_pct(ci: bs.ConfidenceInterval) -> str:
     if ci.point is None:
         return "n/a"
@@ -351,13 +356,12 @@ def sweep_conclusion(rows: Sequence[dict[str, Any]]) -> str:
 # ---------------------------------------------------------------------------
 
 _RESULTS_HEADER = (
-    "| policy | status | recovery rate (95% CI) | net uplift pp (95% CI) | action rate | "
-    "abstained | restraint precision | net INR | cost INR | net value INR | "
+    "| policy | status | recovery rate (95% CI) | net uplift pp (95% CI) | "
+    "recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | "
+    "action rate | abstained | restraint precision | net INR | cost INR | net value INR | "
     "INR spent per INR earned | attempts | contact | viol |"
 )
-_RESULTS_RULE = (
-    "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
-)
+_RESULTS_RULE = "| --- | --- | --- | --- |" + " ---: |" * 15
 
 _ATTRIB_HEADER = (
     "| policy | acted | incremental | cannibalised | wasted | futile | abstained | "
@@ -370,7 +374,10 @@ def _results_row(report: PolicyReport) -> str:
     m = report.metrics
     return (
         f"| `{report.name}` | {report.status} | {_ci_pct(report.ci.recovery_rate)} | "
-        f"{_ci_pp(report.ci.net_uplift_pp)} | {_pct(m.action_rate)} | {m.n_abstained} | "
+        f"{_ci_pp(report.ci.net_uplift_pp)} | {_pct(m.rupee_recovery_rate)} | "
+        f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery)} | "
+        f"{_days(m.mean_days_to_recovery)} | {_pct(m.recovered_within_72h_rate)} | "
+        f"{_pct(m.action_rate)} | {m.n_abstained} | "
         f"{_rate(m.restraint_precision)} | {_money(m.net_rupees)} | "
         f"{_money(m.total_cost_rupees + m.annoyance_cost_rupees)} | "
         f"{_money(m.net_value_rupees)} | {_ratio(m.cost_per_incremental_rupee)} | "
@@ -396,20 +403,50 @@ def _attribution_row(report: PolicyReport) -> str:
     )
 
 
+_RUPEE_ATTRIB_HEADER = (
+    "| policy | at risk INR | incremental | cannibalised | wasted | futile | "
+    "correct restraint | correct walkaway | missed opportunity | sum |"
+)
+_RUPEE_ATTRIB_RULE = "| --- |" + " ---: |" * 9
+
+
+def _rupee_attribution_row(report: PolicyReport) -> str:
+    """The same seven buckets, weighted by money rather than by invoice count."""
+    m = report.metrics
+    buckets = (
+        m.incremental,
+        m.cannibalised,
+        m.wasted,
+        m.futile,
+        m.correct_restraint,
+        m.correct_walkaway,
+        m.missed_opportunity,
+    )
+    cells = " ".join(f"{_pct(b.rupee_share)} |" for b in buckets)
+    return (
+        f"| `{report.name}` | {_money(m.total_rupees_at_risk)} | {cells} "
+        f"{_pct(sum(b.rupee_share for b in buckets))} |"
+    )
+
+
 def _per_mode_table(report: PolicyReport) -> list[str]:
     lines = [
         f"#### `{report.name}` by failure code",
         "",
-        "| failure code | n | recovery | organic | uplift pp | incr | cannib | missed | "
-        "restraint precision | net INR | attempts |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        "| failure code | n | recovery | organic | uplift pp | recovery (INR-wt) | "
+        "uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | "
+        "missed | restraint precision | net INR | attempts |",
+        "| --- | ---: |" + " ---: |" * 14,
     ]
     for code, m in sorted(
         report.metrics.per_failure_code.items(), key=lambda kv: (-kv[1].n, kv[0])
     ):
         lines.append(
             f"| `{code}` | {m.n} | {_pct(m.recovery_rate)} | {_pct(m.organic_rate)} | "
-            f"{m.net_uplift_pp:+.1f} | {m.incremental.count} | {m.cannibalised.count} | "
+            f"{m.net_uplift_pp:+.1f} | {_pct(m.rupee_recovery_rate)} | "
+            f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery)} | "
+            f"{_days(m.mean_days_to_recovery)} | {_pct(m.recovered_within_72h_rate)} | "
+            f"{m.incremental.count} | {m.cannibalised.count} | "
             f"{m.missed_opportunity.count} | {_rate(m.restraint_precision)} | "
             f"{_money(m.net_rupees)} | {m.total_attempts} |"
         )
@@ -496,7 +533,18 @@ def render_markdown(
         "",
         _ATTRIB_HEADER,
         _ATTRIB_RULE,
-    ] + [_attribution_row(r) for r in reports] + [""]
+    ] + [_attribution_row(r) for r in reports] + [
+        "",
+        "### Weighted by rupees at risk",
+        "",
+        "The same seven buckets as a share of the money, not of the invoice count. "
+        "Amounts here span a median around INR 700 to a p95 above INR 31,000, so the "
+        "two views can rank policies differently - and where they diverge, the "
+        "divergence is the finding, not a rounding artefact.",
+        "",
+        _RUPEE_ATTRIB_HEADER,
+        _RUPEE_ATTRIB_RULE,
+    ] + [_rupee_attribution_row(r) for r in reports] + [""]
 
     lines += ["## Breakdown by failure code", ""]
     for report in reports:
@@ -688,6 +736,22 @@ def print_stdout(
             f"| {m.n_abstained:>5} {m.correct_restraint.count:>9} "
             f"{m.correct_walkaway.count:>8} {m.missed_opportunity.count:>6}"
         )
+    print()
+    timing = (
+        f"{'policy':<24} | {'recovery':>8} {'INR-wt':>8} | {'uplift':>7} {'INR-wt':>7} "
+        f"| {'med days':>8} {'mean days':>9} {'<=72h':>7}"
+    )
+    print(timing)
+    print("-" * len(timing))
+    for report in reports:
+        m = report.metrics
+        print(
+            f"{report.name:<24} | {_pct(m.recovery_rate):>8} {_pct(m.rupee_recovery_rate):>8} "
+            f"| {m.net_uplift_pp:>+7.1f} {m.rupee_net_uplift_pp:>+7.1f} "
+            f"| {_days(m.median_days_to_recovery):>8} {_days(m.mean_days_to_recovery):>9} "
+            f"{_pct(m.recovered_within_72h_rate):>7}"
+        )
+
     print()
     for report in reports:
         print(

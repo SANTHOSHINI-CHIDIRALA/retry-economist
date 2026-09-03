@@ -78,6 +78,11 @@ class TxnOutcome:
     compliance_violation: bool
     reason: str
     decide_seconds: float
+    #: Hours from the original failure to the money arriving, taken from the
+    #: action that actually recovered it. None when nothing recovered. Carried
+    #: through because a policy can win on recovery rate purely by waiting, and
+    #: the scoreboard has to be able to see that.
+    hours_to_recovery: float | None = None
     #: Would some action OTHER than abstaining have recovered this, given the
     #: debit attempts the invoice actually had left? Recorded at execution time
     #: because only the harness may consult the counterfactual store - it is what
@@ -238,6 +243,7 @@ def run(
         contacted = False
         executed: list[str] = []
         recovered = False
+        hours_to_recovery: float | None = None
 
         for action in plan:
             cost = action_cost(action)
@@ -254,6 +260,9 @@ def run(
             annoyance += float(action_outcomes[action]["customer_annoyance_delta"])
             if action_outcomes[action]["recovered"]:
                 recovered = True
+                # Measured from the original failure, not from this action, so
+                # a plan's earlier steps are already accounted for.
+                hours_to_recovery = action_outcomes[action]["hours_to_recovery"]
                 break  # paid; everything later in the plan is moot
 
         if not executed:
@@ -264,6 +273,7 @@ def run(
             # invent a cannibalisation that never physically occurred.
             recovered = would_pay_anyway
             annoyance = float(action_outcomes[_NULL_OUTCOME]["customer_annoyance_delta"])
+            hours_to_recovery = action_outcomes[_NULL_OUTCOME]["hours_to_recovery"]
 
         recovering = [
             a for a in ACTIONS if a != _NULL_OUTCOME and action_outcomes[a]["recovered"]
@@ -299,6 +309,7 @@ def run(
                 compliance_violation=breached,
                 reason=decision.reason,
                 decide_seconds=decide_seconds,
+                hours_to_recovery=hours_to_recovery,
                 recoverable_within_caps=any(
                     ATTEMPTS_CONSUMED[a] <= budget for a in recovering
                 ),

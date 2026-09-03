@@ -36,6 +36,7 @@ wins across modes, and only the breakdown tells them apart.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from statistics import fmean, median
 from typing import Any, Mapping, Sequence
 
 from retry_economist.eval.costs import (
@@ -51,14 +52,31 @@ from retry_economist.schema import ACTIONS, ATTEMPTS_CONSUMED
 
 @dataclass(frozen=True, slots=True)
 class Bucket:
-    """One attribution bucket: how many, what share, and how much money."""
+    """One attribution bucket, counted two ways.
+
+    `share` weights every transaction equally; `rupee_share` weights it by the
+    money at stake. With a median amount around INR 700 and a p95 above INR
+    31,000, the two views can rank policies differently - a policy that quietly
+    concentrates on small subscriptions looks fine by count and thin by value.
+    Both are reported, always; neither replaces the other.
+    """
 
     count: int
     share: float
-    rupees: float
+    paise: int
+    rupee_share: float
+
+    @property
+    def rupees(self) -> float:
+        return self.paise / 100.0
 
     def to_dict(self) -> dict[str, float]:
-        return {"count": self.count, "share": round(self.share, 6), "rupees": round(self.rupees, 2)}
+        return {
+            "count": self.count,
+            "share": round(self.share, 6),
+            "rupees": round(self.rupees, 2),
+            "rupee_share": round(self.rupee_share, 6),
+        }
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +88,33 @@ class Metrics:
     recovery_rate: float
     organic_rate: float
     net_uplift_pp: float
+
+    # --- how long the money took to arrive ---------------------------------
+    #
+    # Recovery rate says nothing about when. `retry_next_salary_day` recovers at
+    # roughly 290 hours on average, so a policy can beat another on recovery
+    # rate purely by being willing to wait a fortnight - while the merchant
+    # carries the receivable, the customer forgets the purchase, and the order
+    # may already have been cancelled. The scoreboard exposes that trade rather
+    # than concealing it inside a single percentage.
+    #: Over recovered transactions only. None when nothing recovered - not 0,
+    #: which would read as "recovered instantly".
+    mean_days_to_recovery: float | None
+    median_days_to_recovery: float | None
+    #: Over ALL transactions, so it is directly comparable with recovery_rate
+    #: and can never exceed it.
+    recovered_within_72h_rate: float
+
+    # --- the same picture weighted by money at stake -----------------------
+    #
+    # Amounts span two orders of magnitude here (median ~INR 700, p95 ~INR
+    # 31,000), so counting transactions and counting rupees are different
+    # questions. Reported alongside the count-weighted figures, never instead of
+    # them: a divergence between the two views is itself the finding.
+    total_rupees_at_risk: float
+    rupee_recovery_rate: float
+    rupee_organic_rate: float
+    rupee_net_uplift_pp: float
 
     # --- what the policy chose to do -------------------------------------
     n_acted: int
@@ -125,6 +170,25 @@ class Metrics:
             "recovery_rate": round(self.recovery_rate, 6),
             "organic_rate": round(self.organic_rate, 6),
             "net_uplift_pp": round(self.net_uplift_pp, 4),
+            "timing": {
+                "mean_days_to_recovery": (
+                    None
+                    if self.mean_days_to_recovery is None
+                    else round(self.mean_days_to_recovery, 3)
+                ),
+                "median_days_to_recovery": (
+                    None
+                    if self.median_days_to_recovery is None
+                    else round(self.median_days_to_recovery, 3)
+                ),
+                "recovered_within_72h_rate": round(self.recovered_within_72h_rate, 6),
+            },
+            "rupee_weighted": {
+                "total_rupees_at_risk": round(self.total_rupees_at_risk, 2),
+                "recovery_rate": round(self.rupee_recovery_rate, 6),
+                "organic_rate": round(self.rupee_organic_rate, 6),
+                "net_uplift_pp": round(self.rupee_net_uplift_pp, 4),
+            },
             "n_acted": self.n_acted,
             "n_abstained": self.n_abstained,
             "action_rate": round(self.action_rate, 6),
@@ -172,19 +236,31 @@ class Metrics:
         return out
 
 
-def _bucket(members: Sequence[TxnOutcome], n: int) -> Bucket:
-    rupees = sum(recovered_value_paise(o.amount_paise) for o in members) / 100.0
-    return Bucket(count=len(members), share=(len(members) / n if n else 0.0), rupees=rupees)
+def _bucket(members: Sequence[TxnOutcome], n: int, total_paise: int) -> Bucket:
+    paise = sum(recovered_value_paise(o.amount_paise) for o in members)
+    return Bucket(
+        count=len(members),
+        share=(len(members) / n if n else 0.0),
+        paise=paise,
+        rupee_share=(paise / total_paise if total_paise else 0.0),
+    )
 
 
 def _empty(clv_paise: int, violations: int) -> Metrics:
-    zero = Bucket(0, 0.0, 0.0)
+    zero = Bucket(0, 0.0, 0, 0.0)
     return Metrics(
         n=0,
         n_customers=0,
         recovery_rate=0.0,
         organic_rate=0.0,
         net_uplift_pp=0.0,
+        mean_days_to_recovery=None,
+        median_days_to_recovery=None,
+        recovered_within_72h_rate=0.0,
+        total_rupees_at_risk=0.0,
+        rupee_recovery_rate=0.0,
+        rupee_organic_rate=0.0,
+        rupee_net_uplift_pp=0.0,
         n_acted=0,
         n_abstained=0,
         action_rate=0.0,
@@ -233,16 +309,38 @@ def compute(
     acted = [o for o in outcomes if o.acted]
     abstained = [o for o in outcomes if not o.acted]
 
-    incremental = _bucket([o for o in outcomes if o.incremental], n)
-    cannibalised = _bucket([o for o in outcomes if o.cannibalised], n)
-    wasted = _bucket([o for o in outcomes if o.wasted], n)
-    futile = _bucket([o for o in outcomes if o.futile], n)
-    restraint = _bucket([o for o in outcomes if o.correct_restraint], n)
-    walkaway = _bucket([o for o in outcomes if o.correct_walkaway], n)
-    missed = _bucket([o for o in outcomes if o.missed_opportunity], n)
+    total_paise = sum(recovered_value_paise(o.amount_paise) for o in outcomes)
+
+    incremental = _bucket([o for o in outcomes if o.incremental], n, total_paise)
+    cannibalised = _bucket([o for o in outcomes if o.cannibalised], n, total_paise)
+    wasted = _bucket([o for o in outcomes if o.wasted], n, total_paise)
+    futile = _bucket([o for o in outcomes if o.futile], n, total_paise)
+    restraint = _bucket([o for o in outcomes if o.correct_restraint], n, total_paise)
+    walkaway = _bucket([o for o in outcomes if o.correct_walkaway], n, total_paise)
+    missed = _bucket([o for o in outcomes if o.missed_opportunity], n, total_paise)
 
     recovery_rate = sum(o.recovered for o in outcomes) / n
     organic_rate = sum(o.would_pay_anyway for o in outcomes) / n
+
+    # Timing, over recovered transactions only. A policy that recovers nothing
+    # gets None rather than 0.0: zero days would read as instant success.
+    recovered_hours = [
+        o.hours_to_recovery for o in outcomes if o.recovered and o.hours_to_recovery is not None
+    ]
+    within_72h = sum(
+        1
+        for o in outcomes
+        if o.recovered and o.hours_to_recovery is not None and o.hours_to_recovery <= 72.0
+    )
+
+    # Rupee weighting: the same headline rates, asking "how much money" instead
+    # of "how many invoices".
+    recovered_paise = sum(recovered_value_paise(o.amount_paise) for o in outcomes if o.recovered)
+    organic_paise = sum(
+        recovered_value_paise(o.amount_paise) for o in outcomes if o.would_pay_anyway
+    )
+    rupee_recovery_rate = recovered_paise / total_paise if total_paise else 0.0
+    rupee_organic_rate = organic_paise / total_paise if total_paise else 0.0
 
     net_rupees = incremental.rupees - cannibalised.rupees
     total_cost_paise = sum(o.total_cost_paise for o in outcomes)
@@ -283,6 +381,13 @@ def compute(
         recovery_rate=recovery_rate,
         organic_rate=organic_rate,
         net_uplift_pp=(recovery_rate - organic_rate) * 100.0,
+        mean_days_to_recovery=(fmean(recovered_hours) / 24.0 if recovered_hours else None),
+        median_days_to_recovery=(median(recovered_hours) / 24.0 if recovered_hours else None),
+        recovered_within_72h_rate=within_72h / n,
+        total_rupees_at_risk=total_paise / 100.0,
+        rupee_recovery_rate=rupee_recovery_rate,
+        rupee_organic_rate=rupee_organic_rate,
+        rupee_net_uplift_pp=(rupee_recovery_rate - rupee_organic_rate) * 100.0,
         n_acted=len(acted),
         n_abstained=len(abstained),
         action_rate=len(acted) / n,

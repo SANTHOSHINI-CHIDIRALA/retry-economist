@@ -618,3 +618,139 @@ def test_annoyance_is_priced_through_lifetime_value(dataset: dict) -> None:
     assert m.annoyance_cost_rupees > m.total_cost_rupees, (
         "relationship damage should dominate per-action fees"
     )
+
+
+# ---------------------------------------------------------------------------
+# time to recovery
+# ---------------------------------------------------------------------------
+
+
+class _NeverRecoversPolicy:
+    """Escalates only hard declines that no action can clear, so it never wins.
+
+    Deliberately constructed to recover nothing: it is the only way to test that
+    a policy with no recoveries reports None rather than a plausible-looking 0.
+    """
+
+    name = "never_recovers"
+
+    def decide(self, txn: ObservedTransaction) -> Decision:
+        return Decision(plan=[], reason="abstain")
+
+
+def test_median_days_is_none_not_zero_when_nothing_recovers(dataset: dict) -> None:
+    """A policy that recovers nothing did not recover instantly."""
+    outcomes = [
+        o
+        for o in _run(_NeverRecoversPolicy(), dataset, split="all").outcomes
+        if not o.recovered
+    ]
+    m = mx.compute(outcomes)
+
+    assert m.recovery_rate == 0.0
+    assert m.mean_days_to_recovery is None, "0.0 days would read as instant recovery"
+    assert m.median_days_to_recovery is None
+    assert m.recovered_within_72h_rate == 0.0
+
+    # And the empty population behaves the same way rather than dividing by zero.
+    empty = mx.compute([])
+    assert empty.median_days_to_recovery is None
+    assert empty.mean_days_to_recovery is None
+
+
+def test_within_72h_rate_never_exceeds_recovery_rate(dataset: dict) -> None:
+    """The fast subset cannot be larger than the whole.
+
+    Both are shares of ALL transactions, so the gap between them is exactly the
+    recovery a policy bought by waiting - which is the trade the timing columns
+    exist to expose.
+    """
+    for policy in (DoNothingPolicy(), OracleBestPolicy(dataset["outcomes_by_txn"])):
+        for split in ("all", "holdout"):
+            m = mx.compute_for_run(_run(policy, dataset, split=split))
+            assert m.recovered_within_72h_rate <= m.recovery_rate, (
+                f"{policy.name}/{split}: {m.recovered_within_72h_rate} > {m.recovery_rate}"
+            )
+            for code, sub in m.per_failure_code.items():
+                assert sub.recovered_within_72h_rate <= sub.recovery_rate, code
+
+
+def test_timing_is_reported_per_failure_code(dataset: dict) -> None:
+    m = mx.compute_for_run(_run(OracleBestPolicy(dataset["outcomes_by_txn"]), dataset))
+    assert m.per_failure_code, "expected a per-failure-code breakdown"
+    for code, sub in m.per_failure_code.items():
+        if sub.recovery_rate > 0:
+            assert sub.median_days_to_recovery is not None, code
+            assert sub.mean_days_to_recovery is not None, code
+            assert sub.median_days_to_recovery >= 0.0
+        else:
+            assert sub.median_days_to_recovery is None, code
+
+
+# ---------------------------------------------------------------------------
+# rupee weighting
+# ---------------------------------------------------------------------------
+
+
+def test_rupee_weighted_buckets_sum_to_the_total_at_risk(dataset: dict) -> None:
+    """The seven buckets partition the money exactly, as well as the count."""
+    policies = [
+        DoNothingPolicy(),
+        OracleBestPolicy(dataset["outcomes_by_txn"]),
+        _CapBustingPolicy(),
+    ]
+    for policy in policies:
+        result = _run(policy, dataset, split="all")
+        m = mx.compute_for_run(result)
+        buckets = (
+            m.incremental,
+            m.cannibalised,
+            m.wasted,
+            m.futile,
+            m.correct_restraint,
+            m.correct_walkaway,
+            m.missed_opportunity,
+        )
+        # Exact in paise: money that does not add up exactly is money nobody
+        # trusts, so this is an equality rather than an approximation.
+        assert sum(b.paise for b in buckets) == round(m.total_rupees_at_risk * 100), policy.name
+        assert sum(b.rupee_share for b in buckets) == pytest.approx(1.0)
+        # And the total at risk is the whole population, however it is sliced.
+        assert m.total_rupees_at_risk == pytest.approx(
+            sum(o.amount_paise for o in result.outcomes) / 100.0
+        )
+        for code, sub in m.per_failure_code.items():
+            sub_buckets = (
+                sub.incremental,
+                sub.cannibalised,
+                sub.wasted,
+                sub.futile,
+                sub.correct_restraint,
+                sub.correct_walkaway,
+                sub.missed_opportunity,
+            )
+            assert sum(b.paise for b in sub_buckets) == round(sub.total_rupees_at_risk * 100), code
+
+
+def test_rupee_and_count_views_are_reported_together(dataset: dict) -> None:
+    """Both weightings must survive into the artefacts, neither replacing the other."""
+    m = mx.compute_for_run(_run(OracleBestPolicy(dataset["outcomes_by_txn"]), dataset))
+    payload = m.to_dict()
+
+    assert payload["recovery_rate"] == round(m.recovery_rate, 6)
+    assert payload["rupee_weighted"]["recovery_rate"] == round(m.rupee_recovery_rate, 6)
+    assert payload["rupee_weighted"]["net_uplift_pp"] == round(m.rupee_net_uplift_pp, 4)
+    assert payload["timing"]["recovered_within_72h_rate"] == round(m.recovered_within_72h_rate, 6)
+    for bucket in payload["acted_buckets"].values():
+        assert "share" in bucket and "rupee_share" in bucket
+    # The per-failure-code rows carry both views too.
+    for sub in payload["per_failure_code"].values():
+        assert "rupee_weighted" in sub and "timing" in sub
+
+
+def test_abstaining_carries_no_rupee_uplift(dataset: dict) -> None:
+    """Uplift is zero under both weightings when nothing is ever done."""
+    m = mx.compute_for_run(_run(DoNothingPolicy(), dataset, split="all"))
+    assert m.net_uplift_pp == 0.0
+    assert m.rupee_net_uplift_pp == pytest.approx(0.0)
+    assert m.rupee_recovery_rate == pytest.approx(m.rupee_organic_rate)
