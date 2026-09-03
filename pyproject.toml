@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retry-economist"
+version = "0.1.0"
+description = "Synthetic failed-payment recovery benchmark for the Razorpay AI Buildathon."
+readme = "README.md"
+requires-python = ">=3.11"
+# Deliberately empty. The generator is standard library only, so a dataset can
+# be reproduced from a seed on a bare Python install with nothing vendored and
+# nothing to resolve from a network.
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+# The generated dataset lives under data/ and contains thousands of JSON lines;
+# there is nothing collectable in there, and walking it only slows startup.
+norecursedirs = ["data", ".git", ".venv"]

@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated simulation data (reproducible from a seed, never committed)
+data/generated/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

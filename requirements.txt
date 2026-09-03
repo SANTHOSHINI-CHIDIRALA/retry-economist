@@ -1,0 +1,8 @@
+# Development dependencies only.
+#
+# The generator itself has NO runtime dependencies: it is standard library only,
+# by design, so the simulation is bit-for-bit reproducible on any machine with a
+# bare Python 3.11+ install. Runtime deps (of which there are none) are declared
+# in pyproject.toml; this file exists purely to pin the test tooling.
+
+pytest>=8.0

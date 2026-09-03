@@ -1,0 +1,1329 @@
+{
+  "split": "holdout",
+  "n_transactions": 749,
+  "n_customers": 240,
+  "seed": 42,
+  "generator_hash": "92fad1da7dfc",
+  "bootstrap": {
+    "iterations": 2000,
+    "seed": 20260601,
+    "cluster": "customer_id"
+  },
+  "ceilings": {
+    "cap_free": 0.616822,
+    "cap_limited": 0.614152,
+    "cost_of_caps_pp": 0.267
+  },
+  "cost_constants": {
+    "ATTEMPT_COST_PAISE": 200,
+    "SMS_COST_PAISE": 20,
+    "WHATSAPP_COST_PAISE": 30,
+    "PAYMENT_LINK_COST_PAISE": 30,
+    "NEW_MANDATE_REQUEST_PAISE": 500,
+    "HUMAN_ESCALATION_PAISE": 4500,
+    "CUSTOMER_LIFETIME_VALUE_PAISE": 1200000,
+    "ANNOYANCE_TO_CHURN_PER_UNIT": 0.08,
+    "ANNOYANCE_PAISE_PER_UNIT_DERIVED": 96000.0,
+    "VALUE_CAPTURE_RATE": 1.0
+  },
+  "clv_paise": 1200000,
+  "headline": "not available - no baseline policy in this run",
+  "policies": [
+    {
+      "name": "do_nothing",
+      "is_reference_bound": false,
+      "valid": true,
+      "compliance_violations": [],
+      "metrics": {
+        "n": 749,
+        "n_customers": 240,
+        "recovery_rate": 0.233645,
+        "organic_rate": 0.233645,
+        "net_uplift_pp": 0.0,
+        "n_acted": 0,
+        "n_abstained": 749,
+        "action_rate": 0.0,
+        "acted_buckets": {
+          "incremental": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          },
+          "cannibalised": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          },
+          "wasted": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          },
+          "futile": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          }
+        },
+        "abstained_buckets": {
+          "correct_restraint": {
+            "count": 175,
+            "share": 0.233645,
+            "rupees": 731061.6
+          },
+          "correct_walkaway": {
+            "count": 289,
+            "share": 0.385848,
+            "rupees": 1815689.36
+          },
+          "missed_opportunity": {
+            "count": 285,
+            "share": 0.380507,
+            "rupees": 998094.75
+          }
+        },
+        "restraint_precision": 0.619493,
+        "incremental_rupees": 0.0,
+        "cannibalised_rupees": 0.0,
+        "net_rupees": 0.0,
+        "total_cost_rupees": 0.0,
+        "annoyance_units": 0.0,
+        "annoyance_cost_rupees": 0.0,
+        "net_value_rupees": 0.0,
+        "cost_per_incremental_rupee": null,
+        "clv_paise": 1200000,
+        "total_attempts": 0,
+        "attempts_per_txn": 0.0,
+        "contact_rate": 0.0,
+        "false_escalation_rate": null,
+        "compliance_violations": 0,
+        "hard_decline_retry_waste": 0,
+        "per_failure_code": {
+          "41": {
+            "n": 57,
+            "n_customers": 37,
+            "recovery_rate": 0.0,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 57,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "correct_walkaway": {
+                "count": 35,
+                "share": 0.614035,
+                "rupees": 112485.58
+              },
+              "missed_opportunity": {
+                "count": 22,
+                "share": 0.385965,
+                "rupees": 15921.67
+              }
+            },
+            "restraint_precision": 0.614035,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "51": {
+            "n": 360,
+            "n_customers": 187,
+            "recovery_rate": 0.288889,
+            "organic_rate": 0.288889,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 360,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 104,
+                "share": 0.288889,
+                "rupees": 264391.44
+              },
+              "correct_walkaway": {
+                "count": 122,
+                "share": 0.338889,
+                "rupees": 639421.58
+              },
+              "missed_opportunity": {
+                "count": 134,
+                "share": 0.372222,
+                "rupees": 390583.24
+              }
+            },
+            "restraint_precision": 0.627778,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "91": {
+            "n": 129,
+            "n_customers": 98,
+            "recovery_rate": 0.224806,
+            "organic_rate": 0.224806,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 129,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 29,
+                "share": 0.224806,
+                "rupees": 184241.0
+              },
+              "correct_walkaway": {
+                "count": 36,
+                "share": 0.27907,
+                "rupees": 110261.02
+              },
+              "missed_opportunity": {
+                "count": 64,
+                "share": 0.496124,
+                "rupees": 213931.55
+              }
+            },
+            "restraint_precision": 0.503876,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "96": {
+            "n": 56,
+            "n_customers": 50,
+            "recovery_rate": 0.267857,
+            "organic_rate": 0.267857,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 56,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 15,
+                "share": 0.267857,
+                "rupees": 105842.25
+              },
+              "correct_walkaway": {
+                "count": 16,
+                "share": 0.285714,
+                "rupees": 132234.66
+              },
+              "missed_opportunity": {
+                "count": 25,
+                "share": 0.446429,
+                "rupees": 129138.31
+              }
+            },
+            "restraint_precision": 0.553571,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "ACS_TIMEOUT": {
+            "n": 34,
+            "n_customers": 28,
+            "recovery_rate": 0.411765,
+            "organic_rate": 0.411765,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 34,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 14,
+                "share": 0.411765,
+                "rupees": 143876.78
+              },
+              "correct_walkaway": {
+                "count": 17,
+                "share": 0.5,
+                "rupees": 69129.12
+              },
+              "missed_opportunity": {
+                "count": 3,
+                "share": 0.088235,
+                "rupees": 3212.65
+              }
+            },
+            "restraint_precision": 0.911765,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "MANDATE_EXPIRED_M06": {
+            "n": 36,
+            "n_customers": 31,
+            "recovery_rate": 0.083333,
+            "organic_rate": 0.083333,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 36,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 3,
+                "share": 0.083333,
+                "rupees": 497.0
+              },
+              "correct_walkaway": {
+                "count": 18,
+                "share": 0.5,
+                "rupees": 125923.77
+              },
+              "missed_opportunity": {
+                "count": 15,
+                "share": 0.416667,
+                "rupees": 75180.91
+              }
+            },
+            "restraint_precision": 0.583333,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "R05": {
+            "n": 41,
+            "n_customers": 34,
+            "recovery_rate": 0.0,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 41,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "correct_walkaway": {
+                "count": 31,
+                "share": 0.756098,
+                "rupees": 587123.49
+              },
+              "missed_opportunity": {
+                "count": 10,
+                "share": 0.243902,
+                "rupees": 116579.15
+              }
+            },
+            "restraint_precision": 0.756098,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "U69": {
+            "n": 36,
+            "n_customers": 28,
+            "recovery_rate": 0.277778,
+            "organic_rate": 0.277778,
+            "net_uplift_pp": 0.0,
+            "n_acted": 0,
+            "n_abstained": 36,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 10,
+                "share": 0.277778,
+                "rupees": 32213.13
+              },
+              "correct_walkaway": {
+                "count": 14,
+                "share": 0.388889,
+                "rupees": 39110.14
+              },
+              "missed_opportunity": {
+                "count": 12,
+                "share": 0.333333,
+                "rupees": 53547.27
+              }
+            },
+            "restraint_precision": 0.666667,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          }
+        }
+      },
+      "confidence_intervals": {
+        "iterations": 2000,
+        "seed": 20260601,
+        "n_customers": 240,
+        "recovery_rate": {
+          "point": 0.233645,
+          "low": 0.203681,
+          "high": 0.263158,
+          "level": 0.95
+        },
+        "net_uplift_pp": {
+          "point": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "level": 0.95
+        },
+        "cost_per_incremental_rupee": {
+          "point": null,
+          "low": null,
+          "high": null,
+          "level": 0.95
+        }
+      }
+    },
+    {
+      "name": "oracle_best (CHEATS)",
+      "is_reference_bound": true,
+      "valid": true,
+      "compliance_violations": [],
+      "metrics": {
+        "n": 749,
+        "n_customers": 240,
+        "recovery_rate": 0.614152,
+        "organic_rate": 0.233645,
+        "net_uplift_pp": 38.0507,
+        "n_acted": 285,
+        "n_abstained": 464,
+        "action_rate": 0.380507,
+        "acted_buckets": {
+          "incremental": {
+            "count": 285,
+            "share": 0.380507,
+            "rupees": 998094.75
+          },
+          "cannibalised": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          },
+          "wasted": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          },
+          "futile": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          }
+        },
+        "abstained_buckets": {
+          "correct_restraint": {
+            "count": 175,
+            "share": 0.233645,
+            "rupees": 731061.6
+          },
+          "correct_walkaway": {
+            "count": 289,
+            "share": 0.385848,
+            "rupees": 1815689.36
+          },
+          "missed_opportunity": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0
+          }
+        },
+        "restraint_precision": 1.0,
+        "incremental_rupees": 998094.75,
+        "cannibalised_rupees": 0.0,
+        "net_rupees": 998094.75,
+        "total_cost_rupees": 1079.4,
+        "annoyance_units": 16.18,
+        "annoyance_cost_rupees": 15532.8,
+        "net_value_rupees": 981482.55,
+        "cost_per_incremental_rupee": 0.0166,
+        "clv_paise": 1200000,
+        "total_attempts": 240,
+        "attempts_per_txn": 0.3204,
+        "contact_rate": 0.078772,
+        "false_escalation_rate": 0.0,
+        "compliance_violations": 0,
+        "hard_decline_retry_waste": 0,
+        "per_failure_code": {
+          "41": {
+            "n": 57,
+            "n_customers": 37,
+            "recovery_rate": 0.385965,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 38.5965,
+            "n_acted": 22,
+            "n_abstained": 35,
+            "action_rate": 0.385965,
+            "acted_buckets": {
+              "incremental": {
+                "count": 22,
+                "share": 0.385965,
+                "rupees": 15921.67
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "correct_walkaway": {
+                "count": 35,
+                "share": 0.614035,
+                "rupees": 112485.58
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 15921.67,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 15921.67,
+            "total_cost_rupees": 114.4,
+            "annoyance_units": 4.4,
+            "annoyance_cost_rupees": 4224.0,
+            "net_value_rupees": 11583.27,
+            "cost_per_incremental_rupee": 0.2725,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.385965,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "51": {
+            "n": 360,
+            "n_customers": 187,
+            "recovery_rate": 0.661111,
+            "organic_rate": 0.288889,
+            "net_uplift_pp": 37.2222,
+            "n_acted": 134,
+            "n_abstained": 226,
+            "action_rate": 0.372222,
+            "acted_buckets": {
+              "incremental": {
+                "count": 134,
+                "share": 0.372222,
+                "rupees": 390583.24
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 104,
+                "share": 0.288889,
+                "rupees": 264391.44
+              },
+              "correct_walkaway": {
+                "count": 122,
+                "share": 0.338889,
+                "rupees": 639421.58
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 390583.24,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 390583.24,
+            "total_cost_rupees": 271.2,
+            "annoyance_units": 3.46,
+            "annoyance_cost_rupees": 3321.6,
+            "net_value_rupees": 386990.44,
+            "cost_per_incremental_rupee": 0.0092,
+            "clv_paise": 1200000,
+            "total_attempts": 133,
+            "attempts_per_txn": 0.3694,
+            "contact_rate": 0.002778,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "91": {
+            "n": 129,
+            "n_customers": 98,
+            "recovery_rate": 0.72093,
+            "organic_rate": 0.224806,
+            "net_uplift_pp": 49.6124,
+            "n_acted": 64,
+            "n_abstained": 65,
+            "action_rate": 0.496124,
+            "acted_buckets": {
+              "incremental": {
+                "count": 64,
+                "share": 0.496124,
+                "rupees": 213931.55
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 29,
+                "share": 0.224806,
+                "rupees": 184241.0
+              },
+              "correct_walkaway": {
+                "count": 36,
+                "share": 0.27907,
+                "rupees": 110261.02
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 213931.55,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 213931.55,
+            "total_cost_rupees": 257.0,
+            "annoyance_units": 2.02,
+            "annoyance_cost_rupees": 1939.2,
+            "net_value_rupees": 211735.35,
+            "cost_per_incremental_rupee": 0.0103,
+            "clv_paise": 1200000,
+            "total_attempts": 61,
+            "attempts_per_txn": 0.4729,
+            "contact_rate": 0.023256,
+            "false_escalation_rate": 0.0,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "96": {
+            "n": 56,
+            "n_customers": 50,
+            "recovery_rate": 0.714286,
+            "organic_rate": 0.267857,
+            "net_uplift_pp": 44.6429,
+            "n_acted": 25,
+            "n_abstained": 31,
+            "action_rate": 0.446429,
+            "acted_buckets": {
+              "incremental": {
+                "count": 25,
+                "share": 0.446429,
+                "rupees": 129138.31
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 15,
+                "share": 0.267857,
+                "rupees": 105842.25
+              },
+              "correct_walkaway": {
+                "count": 16,
+                "share": 0.285714,
+                "rupees": 132234.66
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 129138.31,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 129138.31,
+            "total_cost_rupees": 50.0,
+            "annoyance_units": 0.75,
+            "annoyance_cost_rupees": 720.0,
+            "net_value_rupees": 128368.31,
+            "cost_per_incremental_rupee": 0.006,
+            "clv_paise": 1200000,
+            "total_attempts": 25,
+            "attempts_per_txn": 0.4464,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "ACS_TIMEOUT": {
+            "n": 34,
+            "n_customers": 28,
+            "recovery_rate": 0.5,
+            "organic_rate": 0.411765,
+            "net_uplift_pp": 8.8235,
+            "n_acted": 3,
+            "n_abstained": 31,
+            "action_rate": 0.088235,
+            "acted_buckets": {
+              "incremental": {
+                "count": 3,
+                "share": 0.088235,
+                "rupees": 3212.65
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 14,
+                "share": 0.411765,
+                "rupees": 143876.78
+              },
+              "correct_walkaway": {
+                "count": 17,
+                "share": 0.5,
+                "rupees": 69129.12
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 3212.65,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 3212.65,
+            "total_cost_rupees": 6.8,
+            "annoyance_units": 0.28,
+            "annoyance_cost_rupees": 268.8,
+            "net_value_rupees": 2937.05,
+            "cost_per_incremental_rupee": 0.0858,
+            "clv_paise": 1200000,
+            "total_attempts": 3,
+            "attempts_per_txn": 0.0882,
+            "contact_rate": 0.058824,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "MANDATE_EXPIRED_M06": {
+            "n": 36,
+            "n_customers": 31,
+            "recovery_rate": 0.5,
+            "organic_rate": 0.083333,
+            "net_uplift_pp": 41.6667,
+            "n_acted": 15,
+            "n_abstained": 21,
+            "action_rate": 0.416667,
+            "acted_buckets": {
+              "incremental": {
+                "count": 15,
+                "share": 0.416667,
+                "rupees": 75180.91
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 3,
+                "share": 0.083333,
+                "rupees": 497.0
+              },
+              "correct_walkaway": {
+                "count": 18,
+                "share": 0.5,
+                "rupees": 125923.77
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 75180.91,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 75180.91,
+            "total_cost_rupees": 99.6,
+            "annoyance_units": 2.64,
+            "annoyance_cost_rupees": 2534.4,
+            "net_value_rupees": 72546.91,
+            "cost_per_incremental_rupee": 0.035,
+            "clv_paise": 1200000,
+            "total_attempts": 7,
+            "attempts_per_txn": 0.1944,
+            "contact_rate": 0.416667,
+            "false_escalation_rate": 0.0,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "R05": {
+            "n": 41,
+            "n_customers": 34,
+            "recovery_rate": 0.243902,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 24.3902,
+            "n_acted": 10,
+            "n_abstained": 31,
+            "action_rate": 0.243902,
+            "acted_buckets": {
+              "incremental": {
+                "count": 10,
+                "share": 0.243902,
+                "rupees": 116579.15
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "correct_walkaway": {
+                "count": 31,
+                "share": 0.756098,
+                "rupees": 587123.49
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 116579.15,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 116579.15,
+            "total_cost_rupees": 211.2,
+            "annoyance_units": 1.68,
+            "annoyance_cost_rupees": 1612.8,
+            "net_value_rupees": 114755.15,
+            "cost_per_incremental_rupee": 0.0156,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.243902,
+            "false_escalation_rate": 0.0,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "U69": {
+            "n": 36,
+            "n_customers": 28,
+            "recovery_rate": 0.611111,
+            "organic_rate": 0.277778,
+            "net_uplift_pp": 33.3333,
+            "n_acted": 12,
+            "n_abstained": 24,
+            "action_rate": 0.333333,
+            "acted_buckets": {
+              "incremental": {
+                "count": 12,
+                "share": 0.333333,
+                "rupees": 53547.27
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 10,
+                "share": 0.277778,
+                "rupees": 32213.13
+              },
+              "correct_walkaway": {
+                "count": 14,
+                "share": 0.388889,
+                "rupees": 39110.14
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "incremental_rupees": 53547.27,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 53547.27,
+            "total_cost_rupees": 69.2,
+            "annoyance_units": 0.95,
+            "annoyance_cost_rupees": 912.0,
+            "net_value_rupees": 52566.07,
+            "cost_per_incremental_rupee": 0.0183,
+            "clv_paise": 1200000,
+            "total_attempts": 11,
+            "attempts_per_txn": 0.3056,
+            "contact_rate": 0.166667,
+            "false_escalation_rate": 0.0,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          }
+        }
+      },
+      "confidence_intervals": {
+        "iterations": 2000,
+        "seed": 20260601,
+        "n_customers": 240,
+        "recovery_rate": {
+          "point": 0.614152,
+          "low": 0.573633,
+          "high": 0.653793,
+          "level": 0.95
+        },
+        "net_uplift_pp": {
+          "point": 38.050734,
+          "low": 34.736842,
+          "high": 41.436464,
+          "level": 0.95
+        },
+        "cost_per_incremental_rupee": {
+          "point": 0.016644,
+          "low": 0.012225,
+          "high": 0.023287,
+          "level": 0.95
+        }
+      }
+    }
+  ],
+  "multiseed": [],
+  "clv_sweep": {
+    "rows": [
+      {
+        "policy": "do_nothing",
+        "is_reference_bound": false,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      },
+      {
+        "policy": "oracle_best (CHEATS)",
+        "is_reference_bound": true,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 5177.6,
+            "net_value_rupees": 991837.75,
+            "cost_per_incremental_rupee": 0.0063
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 15532.8,
+            "net_value_rupees": 981482.55,
+            "cost_per_incremental_rupee": 0.0166
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 38832.0,
+            "net_value_rupees": 958183.35,
+            "cost_per_incremental_rupee": 0.04
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      }
+    ],
+    "conclusion": "Every policy keeps the sign of its net value across the whole sweep."
+  }
+}
