@@ -15,7 +15,7 @@ claim is measured against three baselines rather than asserted.
 | 4 — Three-signal router | ✅ COMPLETE (SUBSAMPLE, n=47) — real `gemini-3.5-flash-lite`, not the full 749-transaction holdout; background run never finished, see note below |
 | 5 — Economist layer (approve / veto) | ✅ COMPLETE, including the full architecture end to end (`retry_economist (LLM plan)`) - scored on Phase 4's SUBSAMPLE (n=47), not the full holdout; see "The full architecture, end to end" below. |
 | 6 — Audit trail (execution deliberately out of scope) | ✅ COMPLETE |
-| 7 — Demo, README, architecture diagram | ⬜ NOT STARTED |
+| 7 — Demo, README, architecture diagram | ✅ COMPLETE |
 
 ---
 
@@ -877,7 +877,59 @@ the EV block is itemised, not just a total; and a secret-scan test extending
 new artefact - `GEMINI_API_KEY` set to a dummy value, ledger written, the
 value asserted absent from the file.
 
-## ⬜ Phase 7 — Demo, README, architecture diagram
+## ✅ Phase 7 — Demo, README, architecture diagram
+
+The submission artefacts, compressed to what a reviewer or judge actually
+needs. No new measurement happens here - everything is read from the results
+files Phases 1-6 already produced and committed; nothing in `README.md` or
+`scripts/demo.py` is hand-typed independent of them.
+
+**`README.md`** - rewritten top to bottom: the headline (`retry_economist
+(prior)` vs `naive_retry_3x`, verified against `results/holdout_scoreboard.json`
+rather than reusing the file's own auto-generated headline, which compares
+`rules_only` instead since it has the higher raw recovery rate), the framing
+(23.4% organic / 38.6% hopeless / 38.1% addressable, from `do_nothing`'s
+attribution row), the full-holdout results table with paired CIs, a
+CLEARLY SEPARATE subsample subsection for the LLM rows (never sharing a table
+with a full-holdout number), the 245→0 hard-decline result and veto precision
+split, the architecture diagram, the audit-trail section with the `pay_00861`
+example, reproduction commands, and two full sections - "What this cannot do"
+and "Honest findings" - that are real limitations and real null results, not
+disclaimers softened into invisibility.
+
+**Architecture diagram** (mermaid, in `README.md`): 11 nodes, left to right -
+observed transaction → three signals → LLM router `==>` Proposal (labelled
+*"proposes, cannot execute"*) → compliance gate C1-C5 (*"vetoes regardless of
+EV"*) → EV gate (*"amount x delta_p x discount - costs"*) → Decision → audit
+ledger → authorised plan → Scorer, with the Oracle / evaluation harness drawn
+as a separate box touching only the Scorer (*"policies cannot read this"*).
+Kept to two arrow styles (thin, and the one thick `==>`) on purpose - the one
+whiteboard note attached to this diagram in review was "keep it minimal", and
+a diagram distinguishing five line styles is not something anyone redraws
+from memory.
+
+**`scripts/demo.py`** - runs in well under 2 minutes offline (measured: well
+under 1 second; the only "live" step is a single cache-only `Router.propose()`
+call that touches `data/llm_cache/`, zero network). Five beats, each with a
+short printed heading:
+
+```
+python scripts/demo.py
+```
+
+| beat | what it shows | source |
+| --- | --- | --- |
+| (a) | full-holdout scoreboard + paired CIs | `results/holdout_scoreboard.json` |
+| (b) | 245 → 0 hard-decline waste + veto precision split | `results/holdout_scoreboard.json`, `results/veto_precision_naive_plan.md` |
+| (c) | one real C1 veto trace (`pay_00647`, R05, INR 60,000) | `results/veto_demo_real.txt` |
+| (d) | one full router proposal with its rationale (`pay_01921`, SBIN 25.5x baseline, bank downtime) | `data/llm_cache/` via a network-disabled `Router` |
+| (e) | the two `pay_00861` ledger lines side by side | `results/audit_ledger.jsonl` |
+
+Chose `pay_01921` for (d) rather than reusing `pay_00861` again: it is a
+`degraded`-issuer-health case (25.5x baseline) with a legible, single-signal
+rationale, which reads better on camera than ACS_TIMEOUT's more mixed one -
+diversity of example over narrative tidiness, since (e) already gives the
+`pay_00861` narrative thread its own beat.
 
 ---
 
