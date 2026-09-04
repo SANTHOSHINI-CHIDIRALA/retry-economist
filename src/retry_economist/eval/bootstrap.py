@@ -86,6 +86,12 @@ class _CustomerAggregate:
     cannibalised_paise: int
     cost_paise: int
     annoyance_units: float
+    #: Confusion-matrix cells for the act/abstain decision, so decision quality
+    #: can be resampled from the same clusters as everything else.
+    tp: int = 0
+    fp: int = 0
+    fn: int = 0
+    tn: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -111,7 +117,7 @@ class BootstrapResult:
 def _aggregate_by_customer(outcomes: Sequence[TxnOutcome]) -> dict[str, _CustomerAggregate]:
     acc: dict[str, list] = {}
     for o in outcomes:
-        slot = acc.setdefault(o.customer_id, [0, 0, 0, 0, 0, 0, 0.0])
+        slot = acc.setdefault(o.customer_id, [0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0, 0])
         slot[0] += 1
         slot[1] += int(o.recovered)
         slot[2] += int(o.would_pay_anyway)
@@ -121,6 +127,10 @@ def _aggregate_by_customer(outcomes: Sequence[TxnOutcome]) -> dict[str, _Custome
             slot[4] += recovered_value_paise(o.amount_paise)
         slot[5] += o.total_cost_paise
         slot[6] += o.annoyance_delta
+        slot[7] += int(o.incremental)
+        slot[8] += int(o.wasted or o.futile or o.cannibalised)
+        slot[9] += int(o.missed_opportunity)
+        slot[10] += int(o.correct_restraint or o.correct_walkaway)
     return {
         cid: _CustomerAggregate(
             n=v[0],
@@ -130,6 +140,10 @@ def _aggregate_by_customer(outcomes: Sequence[TxnOutcome]) -> dict[str, _Custome
             cannibalised_paise=v[4],
             cost_paise=v[5],
             annoyance_units=v[6],
+            tp=v[7],
+            fp=v[8],
+            fn=v[9],
+            tn=v[10],
         )
         for cid, v in acc.items()
     }
@@ -153,6 +167,28 @@ def _statistics(
     net_uplift_pp = (recovered - organic) / n * 100.0
     cost_ratio = spend_paise / net_paise if net_paise > 0 else None
     return recovery_rate, net_uplift_pp, cost_ratio
+
+
+def net_uplift_statistic(sample: Sequence[_CustomerAggregate]) -> float:
+    """Net uplift in percentage points for one resampled cluster set."""
+    return _statistics(sample)[1]
+
+
+def decision_f1_statistic(sample: Sequence[_CustomerAggregate]) -> float:
+    """Decision F1 for one resampled cluster set.
+
+    Returns 0.0 rather than None for a draw in which the policy never acted:
+    inside a bootstrap the value has to be a number, and a policy that acted on
+    nothing genuinely achieved no true positives in that draw.
+    """
+    tp = sum(a.tp for a in sample)
+    fp = sum(a.fp for a in sample)
+    fn = sum(a.fn for a in sample)
+    if tp == 0:
+        return 0.0
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    return 2 * precision * recall / (precision + recall)
 
 
 def _percentile(values: Sequence[float], q: float) -> float:

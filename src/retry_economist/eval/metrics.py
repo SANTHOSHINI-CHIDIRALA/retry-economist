@@ -80,14 +80,95 @@ class Bucket:
 
 
 @dataclass(frozen=True, slots=True)
+class DecisionQuality:
+    """The seven buckets read as a confusion matrix on one binary decision: act.
+
+    Restraint precision on its own is gameable, and gameable by the most trivial
+    policy there is - `do_nothing` scores 61.9% on it while recovering nothing it
+    did not already get for free. The fix is to report restraint against recall:
+    a policy is only being careful if the transactions it declined to touch were
+    genuinely not worth touching AND it still caught the ones that were.
+
+        TP  incremental                            acted, and it worked
+        FP  wasted + futile + cannibalised          acted, and it should not have
+        FN  missed_opportunity                      did not act, and should have
+        TN  correct_restraint + correct_walkaway    did not act, correctly
+
+    A transaction the policy acted on that some OTHER action would have
+    recovered counts as a false positive, not a false negative: the policy did
+    decide to act, it simply chose the wrong action. Misses are reserved for
+    decisions not to act at all.
+    """
+
+    true_positive: int
+    false_positive: int
+    false_negative: int
+    true_negative: int
+    #: None when the policy never acted - a rate over an empty denominator says
+    #: nothing, and 0.0 would falsely read as "acted, and was always wrong".
+    precision: float | None
+    recall: float | None
+    f1: float | None
+
+    @property
+    def total(self) -> int:
+        return self.true_positive + self.false_positive + self.false_negative + self.true_negative
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "true_positive": self.true_positive,
+            "false_positive": self.false_positive,
+            "false_negative": self.false_negative,
+            "true_negative": self.true_negative,
+            "precision": None if self.precision is None else round(self.precision, 6),
+            "recall": None if self.recall is None else round(self.recall, 6),
+            "f1": None if self.f1 is None else round(self.f1, 6),
+        }
+
+
+def decision_quality(tp: int, fp: int, fn: int, tn: int) -> DecisionQuality:
+    """Build precision/recall/F1 from the four cells, guarding empty denominators."""
+    precision = tp / (tp + fp) if (tp + fp) else None
+    recall = tp / (tp + fn) if (tp + fn) else None
+    if precision is None or recall is None or (precision + recall) == 0:
+        f1 = None
+    else:
+        f1 = 2 * precision * recall / (precision + recall)
+    return DecisionQuality(
+        true_positive=tp,
+        false_positive=fp,
+        false_negative=fn,
+        true_negative=tn,
+        precision=precision,
+        recall=recall,
+        f1=f1,
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class Metrics:
     """Everything the scoreboard reports for one policy over one population."""
 
     n: int
     n_customers: int
+
+    # --- was acting the right call? ----------------------------------------
+    #
+    # The primary view, reported ahead of recovery rate: recovery rate rewards
+    # acting indiscriminately, while this asks whether each decision to act or
+    # abstain was the correct one.
+    decision: DecisionQuality
+    #: The same matrix weighted by rupees at stake. Capturing one INR 60,000 EMI
+    #: is worth two hundred INR 299 subscriptions, and a count-weighted view
+    #: hides which of those a policy is actually catching.
+    rupee_decision: DecisionQuality
+
     recovery_rate: float
     organic_rate: float
     net_uplift_pp: float
+    #: How many transactions actually recovered. Carried explicitly so a report
+    #: can tell "no recoveries" apart from "no transactions".
+    n_recovered: int
 
     # --- how long the money took to arrive ---------------------------------
     #
@@ -167,6 +248,8 @@ class Metrics:
         out: dict[str, Any] = {
             "n": self.n,
             "n_customers": self.n_customers,
+            "decision_quality": self.decision.to_dict(),
+            "rupee_decision_quality": self.rupee_decision.to_dict(),
             "recovery_rate": round(self.recovery_rate, 6),
             "organic_rate": round(self.organic_rate, 6),
             "net_uplift_pp": round(self.net_uplift_pp, 4),
@@ -182,6 +265,11 @@ class Metrics:
                     else round(self.median_days_to_recovery, 3)
                 ),
                 "recovered_within_72h_rate": round(self.recovered_within_72h_rate, 6),
+                # Explicit, so an empty slice and a slice that recovered nothing
+                # stay distinguishable after serialisation - both would
+                # otherwise be a bare null.
+                "n": self.n,
+                "n_recovered": self.n_recovered,
             },
             "rupee_weighted": {
                 "total_rupees_at_risk": round(self.total_rupees_at_risk, 2),
@@ -251,7 +339,10 @@ def _empty(clv_paise: int, violations: int) -> Metrics:
     return Metrics(
         n=0,
         n_customers=0,
+        decision=decision_quality(0, 0, 0, 0),
+        rupee_decision=decision_quality(0, 0, 0, 0),
         recovery_rate=0.0,
+        n_recovered=0,
         organic_rate=0.0,
         net_uplift_pp=0.0,
         mean_days_to_recovery=None,
@@ -342,6 +433,20 @@ def compute(
     rupee_recovery_rate = recovered_paise / total_paise if total_paise else 0.0
     rupee_organic_rate = organic_paise / total_paise if total_paise else 0.0
 
+    # The act/abstain decision as a confusion matrix, counted and weighted.
+    decision = decision_quality(
+        tp=incremental.count,
+        fp=wasted.count + futile.count + cannibalised.count,
+        fn=missed.count,
+        tn=restraint.count + walkaway.count,
+    )
+    rupee_decision = decision_quality(
+        tp=incremental.paise,
+        fp=wasted.paise + futile.paise + cannibalised.paise,
+        fn=missed.paise,
+        tn=restraint.paise + walkaway.paise,
+    )
+
     net_rupees = incremental.rupees - cannibalised.rupees
     total_cost_paise = sum(o.total_cost_paise for o in outcomes)
     annoyance_units = sum(o.annoyance_delta for o in outcomes)
@@ -378,7 +483,10 @@ def compute(
     return Metrics(
         n=n,
         n_customers=len({o.customer_id for o in outcomes}),
+        decision=decision,
+        rupee_decision=rupee_decision,
         recovery_rate=recovery_rate,
+        n_recovered=sum(o.recovered for o in outcomes),
         organic_rate=organic_rate,
         net_uplift_pp=(recovery_rate - organic_rate) * 100.0,
         mean_days_to_recovery=(fmean(recovered_hours) / 24.0 if recovered_hours else None),

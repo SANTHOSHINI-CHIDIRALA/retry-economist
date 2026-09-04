@@ -754,3 +754,29 @@ def test_abstaining_carries_no_rupee_uplift(dataset: dict) -> None:
     assert m.net_uplift_pp == 0.0
     assert m.rupee_net_uplift_pp == pytest.approx(0.0)
     assert m.rupee_recovery_rate == pytest.approx(m.rupee_organic_rate)
+
+
+def test_empty_and_zero_recovery_slices_render_differently(dataset: dict) -> None:
+    """Three absences, three renderings - and the distinction survives JSON.
+
+    "no transactions here" and "transactions, none recovered" are different
+    facts about a policy, and both used to print as a bare "n/a".
+    """
+    from retry_economist.eval.cli import _days
+
+    empty = mx.compute([])
+    assert _days(empty.median_days_to_recovery, empty) == "-"
+    assert empty.to_dict()["timing"]["n"] == 0
+    assert empty.to_dict()["timing"]["n_recovered"] == 0
+
+    nothing_recovered = mx.compute(
+        [o for o in _run(DoNothingPolicy(), dataset, split="all").outcomes if not o.recovered]
+    )
+    assert nothing_recovered.n > 0
+    assert _days(nothing_recovered.median_days_to_recovery, nothing_recovered) == "n/a (0 recovered)"
+    assert nothing_recovered.to_dict()["timing"]["n_recovered"] == 0
+    assert nothing_recovered.to_dict()["timing"]["n"] == nothing_recovered.n
+
+    real = mx.compute_for_run(_run(DoNothingPolicy(), dataset, split="all"))
+    assert _days(real.median_days_to_recovery, real) not in {"-", "n/a (0 recovered)"}
+    assert real.to_dict()["timing"]["n_recovered"] == real.n_recovered > 0

@@ -44,7 +44,9 @@ from retry_economist.eval.simulator import (
 from retry_economist.generator.cli import generate
 from retry_economist.policies.base import ObservedTransaction, Policy
 from retry_economist.policies.do_nothing import DoNothingPolicy
+from retry_economist.policies.naive_retry import NaiveRetry3xPolicy
 from retry_economist.policies.oracle_best import OracleBestPolicy
+from retry_economist.policies.rules_only import RulesOnlyPolicy
 
 DEFAULT_DATA_DIR = Path("data/generated")
 DEFAULT_RESULTS_DIR = Path("results")
@@ -63,8 +65,22 @@ CLV_SWEEP_PAISE: tuple[int, ...] = (400_000, 1_200_000, 3_000_000)
 #: store is injected explicitly into anything that needs it.
 POLICY_BUILDERS: dict[str, Callable[[Mapping[str, Any]], Policy]] = {
     "do_nothing": lambda store: DoNothingPolicy(),
+    "naive_retry_3x": lambda store: NaiveRetry3xPolicy(),
+    "rules_only": lambda store: RulesOnlyPolicy(),
     "oracle_best": lambda store: OracleBestPolicy(_outcomes_by_txn(store)),
 }
+
+#: The incumbent. Fixed-schedule retry is what production dunning systems
+#: actually do, so it - not abstention - is the bar a new policy has to clear,
+#: and the headline compares against it whenever it is in the run.
+INCUMBENT_POLICY = "naive_retry_3x"
+
+#: Comparisons the report always runs when both arms are present. Paired, so the
+#: same customers are resampled for both sides of each difference.
+PAIRED_COMPARISONS: tuple[tuple[str, str], ...] = (
+    ("rules_only", "naive_retry_3x"),
+    ("rules_only", "do_nothing"),
+)
 
 
 def _outcomes_by_txn(store: Mapping[str, Any]) -> dict[str, Any]:
@@ -134,9 +150,20 @@ def _rate(value: float | None) -> str:
     return "n/a" if value is None else _pct(value)
 
 
-def _days(value: float | None) -> str:
-    """None means nothing recovered, which is not the same as recovering in 0 days."""
-    return "n/a" if value is None else f"{value:.2f}"
+def _days(value: float | None, m: mx.Metrics) -> str:
+    """Render a timing figure, keeping three different absences distinguishable.
+
+    An empty slice, a slice that recovered nothing, and a real duration used to
+    collapse into the same "n/a". They mean different things - no data, versus a
+    policy that never succeeded - so they render differently and the JSON
+    carries `n` and `n_recovered` alongside, so the distinction survives
+    serialisation too.
+    """
+    if m.n == 0:
+        return "-"
+    if value is None:
+        return "n/a (0 recovered)"
+    return f"{value:.2f}"
 
 
 def _ci_pct(ci: bs.ConfidenceInterval) -> str:
@@ -240,9 +267,11 @@ def build_headline(reports: Sequence[PolicyReport]) -> str:
     if not others:
         return NO_HEADLINE
 
-    # The baseline is whichever honest policy spends the fewest attempts -
-    # normally abstaining, but never assumed to be.
-    comparison = min(others, key=lambda r: r.metrics.attempts_per_txn)
+    # Prefer the incumbent: beating the policy a merchant is running today is
+    # the claim that matters. Falling back to the least-interventionist honest
+    # policy keeps the headline meaningful in runs that omit the incumbent.
+    incumbent = next((r for r in others if r.name == INCUMBENT_POLICY), None)
+    comparison = incumbent or min(others, key=lambda r: r.metrics.attempts_per_txn)
 
     if subject.metrics.recovery_rate < comparison.metrics.recovery_rate:
         return NO_HEADLINE  # unreachable by construction; kept as a hard stop
@@ -267,6 +296,91 @@ def build_headline(reports: Sequence[PolicyReport]) -> str:
         f"Recovered {_pct(subject.metrics.recovery_rate)} vs "
         f"{_pct(comparison.metrics.recovery_rate)} for {comparison.name}, {clause}."
     )
+
+
+# ---------------------------------------------------------------------------
+# paired comparisons
+# ---------------------------------------------------------------------------
+
+
+def run_paired_comparisons(
+    reports: Sequence[PolicyReport],
+    pairs: Sequence[tuple[str, str]] = PAIRED_COMPARISONS,
+    *,
+    iterations: int = bs.DEFAULT_ITERATIONS,
+    seed: int = bs.DEFAULT_SEED,
+) -> list[dict[str, Any]]:
+    """Paired CIs for the difference between two policies, same customers both sides.
+
+    Paired rather than eyeballing two marginal intervals: both policies are
+    scored on the same payers, so a draw containing several hard-blocked
+    customers drags BOTH down, and that shared swing is not evidence about which
+    policy is better. Differencing inside each iteration cancels it, which is
+    why these intervals are much tighter than the overlap of the marginals - and
+    why overlapping marginals routinely hide a real difference.
+    """
+    by_name = {r.name: r for r in reports}
+    rows: list[dict[str, Any]] = []
+    for subject_name, baseline_name in pairs:
+        subject = by_name.get(subject_name)
+        baseline = by_name.get(baseline_name)
+        if subject is None or baseline is None:
+            continue  # that pairing was not part of this run
+        uplift = bs.paired_bootstrap(
+            subject.result,
+            baseline.result,
+            iterations=iterations,
+            seed=seed,
+            statistic=bs.net_uplift_statistic,
+        )
+        f1 = bs.paired_bootstrap(
+            subject.result,
+            baseline.result,
+            iterations=iterations,
+            seed=seed,
+            statistic=bs.decision_f1_statistic,
+        )
+        rows.append(
+            {
+                "subject": subject_name,
+                "baseline": baseline_name,
+                "net_uplift_pp_delta": uplift.to_dict(),
+                "decision_f1_delta": f1.to_dict(),
+                # An interval that excludes zero is a difference the data
+                # supports; one that straddles it is not, and the report says so
+                # rather than leaving the reader to compare two numbers.
+                "uplift_significant": bool(
+                    uplift.low is not None and (uplift.low > 0 or uplift.high < 0)
+                ),
+                "f1_significant": bool(f1.low is not None and (f1.low > 0 or f1.high < 0)),
+            }
+        )
+    return rows
+
+
+def render_paired(rows: Sequence[dict[str, Any]]) -> list[str]:
+    lines = [
+        "## Paired comparisons",
+        "",
+        "Difference between two policies, bootstrapped over the SAME resampled "
+        "customers on both sides. An interval excluding zero is a difference the "
+        "evidence supports.",
+        "",
+        "| comparison | net uplift pp delta (95% CI) | supported | decision F1 delta (95% CI) | "
+        "supported |",
+        "| --- | ---: | :---: | ---: | :---: |",
+    ]
+    for row in rows:
+        u, f = row["net_uplift_pp_delta"], row["decision_f1_delta"]
+        lines.append(
+            f"| `{row['subject']}` vs `{row['baseline']}` | "
+            f"{u['point']:+.2f} [{u['low']:+.2f}, {u['high']:+.2f}] | "
+            f"{'yes' if row['uplift_significant'] else 'no'} | "
+            f"{f['point']:+.4f} [{f['low']:+.4f}, {f['high']:+.4f}] | "
+            f"{'yes' if row['f1_significant'] else 'no'} |"
+        )
+    lines.append("")
+    return lines
 
 
 # ---------------------------------------------------------------------------
@@ -356,12 +470,14 @@ def sweep_conclusion(rows: Sequence[dict[str, Any]]) -> str:
 # ---------------------------------------------------------------------------
 
 _RESULTS_HEADER = (
-    "| policy | status | recovery rate (95% CI) | net uplift pp (95% CI) | "
+    "| policy | status | decision precision | decision recall | decision F1 | "
+    "precision (INR-wt) | recall (INR-wt) | F1 (INR-wt) | "
+    "recovery rate (95% CI) | net uplift pp (95% CI) | "
     "recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | "
     "action rate | abstained | restraint precision | net INR | cost INR | net value INR | "
     "INR spent per INR earned | attempts | contact | viol |"
 )
-_RESULTS_RULE = "| --- | --- | --- | --- |" + " ---: |" * 15
+_RESULTS_RULE = "| --- | --- |" + " ---: |" * 21
 
 _ATTRIB_HEADER = (
     "| policy | acted | incremental | cannibalised | wasted | futile | abstained | "
@@ -372,11 +488,14 @@ _ATTRIB_RULE = "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | 
 
 def _results_row(report: PolicyReport) -> str:
     m = report.metrics
+    d, rd = m.decision, m.rupee_decision
     return (
-        f"| `{report.name}` | {report.status} | {_ci_pct(report.ci.recovery_rate)} | "
+        f"| `{report.name}` | {report.status} | {_rate(d.precision)} | {_rate(d.recall)} | "
+        f"{_rate(d.f1)} | {_rate(rd.precision)} | {_rate(rd.recall)} | {_rate(rd.f1)} | "
+        f"{_ci_pct(report.ci.recovery_rate)} | "
         f"{_ci_pp(report.ci.net_uplift_pp)} | {_pct(m.rupee_recovery_rate)} | "
-        f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery)} | "
-        f"{_days(m.mean_days_to_recovery)} | {_pct(m.recovered_within_72h_rate)} | "
+        f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery, m)} | "
+        f"{_days(m.mean_days_to_recovery, m)} | {_pct(m.recovered_within_72h_rate)} | "
         f"{_pct(m.action_rate)} | {m.n_abstained} | "
         f"{_rate(m.restraint_precision)} | {_money(m.net_rupees)} | "
         f"{_money(m.total_cost_rupees + m.annoyance_cost_rupees)} | "
@@ -433,19 +552,23 @@ def _per_mode_table(report: PolicyReport) -> list[str]:
     lines = [
         f"#### `{report.name}` by failure code",
         "",
-        "| failure code | n | recovery | organic | uplift pp | recovery (INR-wt) | "
+        "| failure code | n | precision | recall | F1 | precision (INR-wt) | recall (INR-wt) | "
+        "F1 (INR-wt) | recovery | organic | uplift pp | recovery (INR-wt) | "
         "uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | "
         "missed | restraint precision | net INR | attempts |",
-        "| --- | ---: |" + " ---: |" * 14,
+        "| --- | ---: |" + " ---: |" * 20,
     ]
     for code, m in sorted(
         report.metrics.per_failure_code.items(), key=lambda kv: (-kv[1].n, kv[0])
     ):
         lines.append(
-            f"| `{code}` | {m.n} | {_pct(m.recovery_rate)} | {_pct(m.organic_rate)} | "
+            f"| `{code}` | {m.n} | {_rate(m.decision.precision)} | {_rate(m.decision.recall)} | "
+            f"{_rate(m.decision.f1)} | {_rate(m.rupee_decision.precision)} | "
+            f"{_rate(m.rupee_decision.recall)} | {_rate(m.rupee_decision.f1)} | "
+            f"{_pct(m.recovery_rate)} | {_pct(m.organic_rate)} | "
             f"{m.net_uplift_pp:+.1f} | {_pct(m.rupee_recovery_rate)} | "
-            f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery)} | "
-            f"{_days(m.mean_days_to_recovery)} | {_pct(m.recovered_within_72h_rate)} | "
+            f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery, m)} | "
+            f"{_days(m.mean_days_to_recovery, m)} | {_pct(m.recovered_within_72h_rate)} | "
             f"{m.incremental.count} | {m.cannibalised.count} | "
             f"{m.missed_opportunity.count} | {_rate(m.restraint_precision)} | "
             f"{_money(m.net_rupees)} | {m.total_attempts} |"
@@ -465,6 +588,7 @@ def render_markdown(
     bootstrap_seed: int,
     ceilings: mx.Ceilings,
     clv_paise: int = CUSTOMER_LIFETIME_VALUE_PAISE,
+    paired: Sequence[dict[str, Any]] | None = None,
     multiseed: Sequence[dict[str, Any]] | None = None,
     clv_sweep: Sequence[dict[str, Any]] | None = None,
 ) -> str:
@@ -545,6 +669,9 @@ def render_markdown(
         _RUPEE_ATTRIB_HEADER,
         _RUPEE_ATTRIB_RULE,
     ] + [_rupee_attribution_row(r) for r in reports] + [""]
+
+    if paired:
+        lines += render_paired(paired)
 
     lines += ["## Breakdown by failure code", ""]
     for report in reports:
@@ -644,6 +771,7 @@ def render_json(
     bootstrap_seed: int,
     ceilings: mx.Ceilings,
     clv_paise: int = CUSTOMER_LIFETIME_VALUE_PAISE,
+    paired: Sequence[dict[str, Any]] | None = None,
     multiseed: Sequence[dict[str, Any]] | None = None,
     clv_sweep: Sequence[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
@@ -669,6 +797,7 @@ def render_json(
             }
             for r in reports
         ],
+        "paired_comparisons": list(paired) if paired else [],
         "multiseed": list(multiseed) if multiseed else [],
         "clv_sweep": {
             "rows": list(clv_sweep),
@@ -693,6 +822,21 @@ def print_stdout(
         f"{ceilings.cost_of_caps_pp:.1f} pp)"
     )
     print()
+    decisions = (
+        f"{'policy':<24} {'status':<8} | {'precis':>7} {'recall':>7} {'F1':>7} "
+        f"| {'precis$':>7} {'recall$':>7} {'F1$':>7}"
+    )
+    print(decisions)
+    print("-" * len(decisions))
+    for report in reports:
+        d, rd = report.metrics.decision, report.metrics.rupee_decision
+        print(
+            f"{report.name:<24} {report.status:<8} | {_rate(d.precision):>7} "
+            f"{_rate(d.recall):>7} {_rate(d.f1):>7} | {_rate(rd.precision):>7} "
+            f"{_rate(rd.recall):>7} {_rate(rd.f1):>7}"
+        )
+    print()
+
     header = (
         f"{'policy':<24} {'status':<8} {'recovery':>9} {'uplift':>7} {'act%':>6} "
         f"{'abst':>5} {'restr.p':>8} {'net INR':>11} {'cost INR':>10} {'net value':>12} "
@@ -748,7 +892,7 @@ def print_stdout(
         print(
             f"{report.name:<24} | {_pct(m.recovery_rate):>8} {_pct(m.rupee_recovery_rate):>8} "
             f"| {m.net_uplift_pp:>+7.1f} {m.rupee_net_uplift_pp:>+7.1f} "
-            f"| {_days(m.median_days_to_recovery):>8} {_days(m.mean_days_to_recovery):>9} "
+            f"| {_days(m.median_days_to_recovery, m):>8} {_days(m.mean_days_to_recovery, m):>9} "
             f"{_pct(m.recovered_within_72h_rate):>7}"
         )
 
@@ -842,8 +986,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--split", default="holdout", choices=("holdout", "train", "all"))
     parser.add_argument(
         "--policies",
-        default="do_nothing,oracle_best",
-        help="comma-separated policy names (default: do_nothing,oracle_best)",
+        default="do_nothing,naive_retry_3x,rules_only,oracle_best",
+        help="comma-separated policy names (default: all four)",
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="data seed (default: 42)")
     parser.add_argument(
@@ -891,6 +1035,9 @@ def main(argv: list[str] | None = None) -> int:
             seeds, policy_names, args.split, n=args.n, n_customers=args.customers
         )
 
+    paired = run_paired_comparisons(
+        reports, iterations=args.iterations, seed=args.bootstrap_seed
+    )
     clv_sweep = run_clv_sweep(reports) if args.clv_sweep else None
 
     common = {
@@ -901,6 +1048,7 @@ def main(argv: list[str] | None = None) -> int:
         "iterations": args.iterations,
         "bootstrap_seed": args.bootstrap_seed,
         "ceilings": mx.ceilings(subset, store),
+        "paired": paired,
         "multiseed": multiseed,
         "clv_sweep": clv_sweep,
     }
@@ -914,6 +1062,20 @@ def main(argv: list[str] | None = None) -> int:
         fh.write(json.dumps(render_json(reports, **common), indent=2) + "\n")
 
     print_stdout(reports, build_headline(reports), common["ceilings"])
+    if paired:
+        print("paired comparisons (same customers resampled for both arms):")
+        for row in paired:
+            u, f = row["net_uplift_pp_delta"], row["decision_f1_delta"]
+            print(
+                f"  {row['subject']} vs {row['baseline']}: "
+                f"uplift {u['point']:+.2f} pp [{u['low']:+.2f}, {u['high']:+.2f}]"
+                f"{' *' if row['uplift_significant'] else ''}  |  "
+                f"F1 {f['point']:+.4f} [{f['low']:+.4f}, {f['high']:+.4f}]"
+                f"{' *' if row['f1_significant'] else ''}"
+            )
+        print("  (* = interval excludes zero)")
+        print()
+
     if multiseed:
         print("robustness across seeds:")
         for row in multiseed:
