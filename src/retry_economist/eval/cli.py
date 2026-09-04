@@ -1396,6 +1396,15 @@ def main(argv: list[str] | None = None) -> int:
         default=DAILY_DISCOUNT_RATE,
         help=f"daily discount rate for {RETRY_ECONOMIST_PRIOR_NAME!r} (default {DAILY_DISCOUNT_RATE})",
     )
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help=(
+            "append one audit-ledger record per decision, for every "
+            "EconomistOverPlan-based policy in --policies, to "
+            "results/audit_ledger.jsonl (off by default; append-only, never overwritten)"
+        ),
+    )
     args = parser.parse_args(argv)
 
     policy_names = [p.strip() for p in args.policies.split(",") if p.strip()]
@@ -1439,6 +1448,28 @@ def main(argv: list[str] | None = None) -> int:
         iterations=args.iterations,
         bootstrap_seed=args.bootstrap_seed,
     )
+
+    if args.audit:
+        # `_PRIOR_CONTEXT["policies"]` holds the actual EconomistOverPlan
+        # instances `evaluate()` just built and ran, keyed by name (see
+        # `_build_retry_economist_prior_policy`) - reusing them here means the
+        # ledger is built from the SAME decisions the scoreboard was scored
+        # against, never a re-decided copy.
+        from retry_economist.audit.ledger import AuditLedger, audit_policy_run
+
+        ledger = AuditLedger()
+        audited = 0
+        for name, policy in _PRIOR_CONTEXT.get("policies", {}).items():
+            if name not in policy_names:
+                continue
+            records = audit_policy_run(ledger, policy, subset)
+            audited += len(records)
+            print(f"audit: wrote {len(records)} ledger record(s) for {name!r} -> {ledger.path}")
+        if audited == 0:
+            print(
+                "audit: no EconomistOverPlan-based policy in --policies "
+                f"({', '.join(policy_names)}) - nothing to audit"
+            )
 
     multiseed = None
     if args.seeds:

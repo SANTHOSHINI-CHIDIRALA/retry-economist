@@ -265,8 +265,8 @@ The SUBSAMPLE is exactly the holdout transactions with a real cached `gemini-3.5
 | `41` | 7 | 14.9% | 57 | 7.6% | +7.3 |
 | `96` | 2 | 4.3% | 56 | 7.5% | -3.2 |
 | `R05` | 2 | 4.3% | 41 | 5.5% | -1.2 |
-| `U69` | 3 | 6.4% | 36 | 4.8% | +1.6 |
 | `MANDATE_EXPIRED_M06` | 4 | 8.5% | 36 | 4.8% | +3.7 |
+| `U69` | 3 | 6.4% | 36 | 4.8% | +1.6 |
 | `ACS_TIMEOUT` | 2 | 4.3% | 34 | 4.5% | -0.3 |
 
 ## Diagnostic 1 - action distribution: model vs `rules_only` vs `oracle_best`

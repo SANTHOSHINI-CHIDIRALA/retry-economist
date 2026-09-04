@@ -14,7 +14,7 @@ claim is measured against three baselines rather than asserted.
 | 3 — Three baselines | ✅ COMPLETE |
 | 4 — Three-signal router | ✅ COMPLETE (SUBSAMPLE, n=47) — real `gemini-3.5-flash-lite`, not the full 749-transaction holdout; background run never finished, see note below |
 | 5 — Economist layer (approve / veto) | ✅ COMPLETE, including the full architecture end to end (`retry_economist (LLM plan)`) - scored on Phase 4's SUBSAMPLE (n=47), not the full holdout; see "The full architecture, end to end" below. |
-| 6 — Bounded execution + audit trail | ⬜ NOT STARTED |
+| 6 — Audit trail (execution deliberately out of scope) | ✅ COMPLETE |
 | 7 — Demo, README, architecture diagram | ⬜ NOT STARTED |
 
 ---
@@ -722,7 +722,160 @@ all of them.
   restraint on hard/risk declines holds outside this subsample's skew (see
   Phase 4's representativeness table).
 
-## ⬜ Phase 6 — Bounded execution + audit trail
+## ✅ Phase 6 — Audit trail (execution deliberately out of scope)
+
+**Scope, stated once here and in `README.md` so it cannot be missed:** this
+phase does not execute anything against a real payment gateway. There is no
+HTTP client anywhere in this codebase, no fake Razorpay server, and none is
+planned - wiring an authorised plan to a real API call is explicitly out of
+scope for this project. What this phase gives instead is the audit trail an
+execution layer would need before anyone could trust it: a durable,
+line-by-line record of WHY a rupee was or was not spent, readable without
+opening the code.
+
+### `src/retry_economist/audit/ledger.py`
+
+An append-only JSONL ledger, one record per `EconomistDecision`, written to
+`results/audit_ledger.jsonl`. "Append-only" is enforced structurally
+(`AuditLedger.append` opens the file in `"a"` mode and writes exactly one
+line - it never reads its own history back to decide anything) and checked
+directly: `test_append_only_never_rewrites_earlier_bytes` writes once, snapshots
+the bytes, writes again, and asserts the second run's file starts with the
+first run's bytes unchanged.
+
+**Every record carries full decision provenance** - `txn_id`, `decided_at`,
+`policy`, `estimator`, `provider` (label + pinned model, or
+`"deterministic (no LLM)"` / `null` when the plan source is rule-based), the
+three signals with their confidences, the proposal (plan, rationale, and -
+when the plan source is LLM-backed - the model's own self-reported
+`root_cause`/`root_cause_confidence`/`p_recover_if_act`/`p_recover_if_abstain`),
+every compliance rule checked and which fired, the itemised EV terms (every
+line of `EV(plan) = amount x delta_p x discount - costs`, not just the net),
+the verdict, the final authorised plan, and a human-readable reason.
+
+**Idempotency**: `idempotency_key(txn_id, action, attempt_index)` -
+`sha256` over exactly those three values, mirroring `llm/cache.py::cache_key`'s
+pattern. `attempt_index` numbers the action's position in the FINAL
+authorised plan (after compliance), not the original proposal - a rule
+removing the tail of a ladder must not shift the survivors' keys.
+`test_idempotency_keys_are_stable_across_two_separate_runs` builds two
+independent policy instances over the same transaction and asserts identical
+keys; `test_idempotency_index_reflects_the_final_authorised_plan_not_the_proposal`
+checks the position guarantee directly with a capped ladder.
+
+### `--audit` on the eval CLI, off by default
+
+```
+python -m retry_economist.eval.cli --split holdout --policies "retry_economist (prior)" --audit
+python scripts/subsample_scoreboard.py --audit
+```
+
+Both append to the SAME `results/audit_ledger.jsonl` (append-only across
+separate invocations too, not just within one process) - confirmed by
+running `--audit` off (unchanged line count), then each command exactly
+once. Run over both required configurations:
+
+| policy | split | n records | approve | approve_truncated | veto |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `retry_economist (prior)` | full holdout (749) | 749 | 525 | 0 | 224 |
+| `retry_economist (LLM plan)` | Phase 4 SUBSAMPLE (47) | 47 | 26 | 0 | 21 |
+
+**Total: 796 records, one per decision, both counts matching the two
+scoreboards' own verdict counts exactly** (`results/holdout_scoreboard.md`
+and `results/subsample_scoreboard.md`'s Diagnostic 6). `approve_truncated`
+is 0 in both, consistent with every prior measurement in this project - see
+Phase 5's naive-plan and LLM-plan verdict counts for why a partial
+truncation has yet to occur on any real data this project has scored.
+
+One full record, verbatim, from each (`results/audit_ledger.jsonl`, both for
+the same transaction, `pay_00861`, an ACS_TIMEOUT / three-DS-dropoff case -
+priced two different ways by two different plan sources against the same
+train-only prior):
+
+```json
+{
+  "policy": "retry_economist (prior)",
+  "txn_id": "pay_00861",
+  "provider": {"label": "deterministic (no LLM)", "model": null},
+  "estimator": "historical_prior_train_only",
+  "signals": {
+    "root_cause": {"value": "three_ds_dropoff", "confidence": 0.95,
+      "summary": "code ACS_TIMEOUT and the gateway text both read as three_ds_dropoff"},
+    "issuer_health_now": {"value": "normal", "confidence": 0.3,
+      "summary": "SBIN shows 1.1x its baseline failure volume in the 6h window around this attempt (1 failures): failure volume within this issuer's normal range"},
+    "liquidity_timing": {"value": 7, "confidence": 0.22,
+      "summary": "likely credit around day 7 of the month, about 6 day(s) away; inferred from 1 other failure(s) by this customer"}
+  },
+  "proposal": {
+    "plan": ["nudge_then_retry"],
+    "rationale": "R-3DS: nudge_then_retry - cardholder abandoned the OTP page; a reminder recovers intent before re-presenting",
+    "root_cause": null, "root_cause_confidence": null,
+    "p_recover_if_act": null, "p_recover_if_abstain": null
+  },
+  "compliance": {"allowed_plan": ["nudge_then_retry"], "is_truncated": false,
+    "checks": [ /* C1-C5, none fired */ ]},
+  "ev": {
+    "plan": ["nudge_then_retry"], "amount_paise": 110792, "value_capture_rate": 1.0,
+    "p_recover_if_act": 0.527027, "p_recover_if_abstain": 0.378378, "delta_p": 0.148649,
+    "expected_days_to_recovery": 1.0, "daily_discount_rate": 0.02, "discount_factor": 0.980392,
+    "gross_value_paise": 16146.16, "action_cost_paise": 260, "annoyance_units": 0.16,
+    "annoyance_cost_paise": 15360.0, "net_expected_value_paise": 526.16
+  },
+  "verdict": "approve", "authorised_plan": ["nudge_then_retry"],
+  "reason": "net expected value +526.16 paise for ['nudge_then_retry'] under the historical_prior_train_only estimator",
+  "idempotency_keys": [{"action": "nudge_then_retry", "attempt_index": 0,
+    "key": "50f6bdb58728eeb101c68f916a14284c0cda6fbbfcda9829c5d4a7339fd6f737"}]
+}
+```
+
+```json
+{
+  "policy": "retry_economist (LLM plan)",
+  "txn_id": "pay_00861",
+  "provider": {"label": "gemini:gemini-3.5-flash-lite (SUBSAMPLE - cache replay only, no network)",
+    "model": "gemini-3.5-flash-lite"},
+  "estimator": "historical_prior_train_only",
+  "signals": { /* identical to above - same transaction, same SignalIndex */ },
+  "proposal": {
+    "plan": ["retry_now"],
+    "rationale": "The failure was caused by a 3DS timeout during authentication as indicated by the root_cause signal. Since this is a soft decline and attempts left allows it, an immediate retry is warranted to capture the user before they abandon the flow entirely.",
+    "root_cause": "three_ds_dropoff", "root_cause_confidence": 0.95,
+    "p_recover_if_act": 0.65, "p_recover_if_abstain": 0.1
+  },
+  "compliance": {"allowed_plan": ["retry_now"], "is_truncated": false,
+    "checks": [ /* C1-C5, none fired */ ]},
+  "ev": {
+    "plan": ["retry_now"], "amount_paise": 110792, "value_capture_rate": 1.0,
+    "p_recover_if_act": 0.472973, "p_recover_if_abstain": 0.378378, "delta_p": 0.094595,
+    "expected_days_to_recovery": 0.02, "daily_discount_rate": 0.02, "discount_factor": 0.999604,
+    "gross_value_paise": 10476.17, "action_cost_paise": 200, "annoyance_units": 0.03,
+    "annoyance_cost_paise": 2880.0, "net_expected_value_paise": 7396.17
+  },
+  "verdict": "approve", "authorised_plan": ["retry_now"],
+  "reason": "net expected value +7396.17 paise for ['retry_now'] under the historical_prior_train_only estimator",
+  "idempotency_keys": [{"action": "retry_now", "attempt_index": 0,
+    "key": "1f6d01b2384b6a792ef535e0f51aef8efe3f3d9affcd90b2ae0cb00d0b1b1c40"}]
+}
+```
+
+Note the real model's own `p_recover_if_act` (0.65) and the historical
+prior's priced `p_recover_if_act` (0.472973) for the SAME action on the SAME
+transaction disagree by 18 points - a concrete, single-line illustration of
+Phase 4's finding that the router's self-reported probabilities are not what
+prices the decision. The full record carries both, side by side, specifically
+so an auditor does not have to take that finding on faith.
+
+**Tests** (`tests/test_audit.py`, 10 tests, no API key or network anywhere in
+the file): exactly one record per decision and every line parses as valid
+JSON (`test_exactly_one_record_per_decision_and_every_line_is_valid_json`);
+idempotency keys unique within a run across ten multi-action plans
+(`test_keys_unique_within_a_run`) and stable across two independent runs;
+the append-only guarantee; the full-provenance schema, exercised on a real
+veto path (a hard decline strips `naive_retry_3x`'s whole ladder via C2);
+the EV block is itemised, not just a total; and a secret-scan test extending
+`test_router.py::test_no_secret_is_written_to_the_cache`'s pattern to this
+new artefact - `GEMINI_API_KEY` set to a dummy value, ledger written, the
+value asserted absent from the file.
 
 ## ⬜ Phase 7 — Demo, README, architecture diagram
 
@@ -740,6 +893,8 @@ python -m retry_economist.eval.cli --split holdout \
     --policies "do_nothing,naive_retry_3x,rules_only,retry_economist (prior),oracle_best" \
     --clv-sweep --discount-sweep
 python scripts/subsample_scoreboard.py   # Phase 4 + 5 end-to-end close-out: real model, n=47, offline, no key needed
+python -m retry_economist.eval.cli --split holdout --policies "retry_economist (prior)" --audit   # Phase 6: 749 ledger records
+python scripts/subsample_scoreboard.py --audit   # Phase 6: 47 more ledger records, same file, appended
 python -m pytest tests -q
 ```
 

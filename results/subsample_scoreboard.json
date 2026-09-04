@@ -8789,7 +8789,7 @@
     "parse_failures": 0,
     "rate_limit_retries": 0,
     "mean_latency_seconds": 0.0001,
-    "total_latency_seconds": 0.005,
+    "total_latency_seconds": 0.004,
     "cache": {
       "hits": 47,
       "misses": 0,

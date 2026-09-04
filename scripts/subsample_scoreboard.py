@@ -37,10 +37,15 @@ honest, labelled subsample instead:
 Writes `results/subsample_scoreboard.md` and `.json`. Never touches
 `results/holdout_scoreboard.md` - that file is Phase 5's non-LLM main result,
 and this is a different experiment.
+
+5. With `--audit`, off by default: appends one audit-ledger record per
+   `retry_economist (LLM plan)` decision on the subsample to
+   `results/audit_ledger.jsonl` (append-only; see `audit/ledger.py`).
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 from collections import Counter
 from pathlib import Path
@@ -154,7 +159,7 @@ def render_distribution_comparison(sub: Counter, full: Counter) -> list[str]:
     ]
     sub_total = sum(sub.values())
     full_total = sum(full.values())
-    for code in sorted(set(sub) | set(full), key=lambda c: -full.get(c, 0)):
+    for code in sorted(set(sub) | set(full), key=lambda c: (-full.get(c, 0), c)):
         s_n, f_n = sub.get(code, 0), full.get(code, 0)
         s_share = s_n / sub_total if sub_total else 0.0
         f_share = f_n / full_total if full_total else 0.0
@@ -433,7 +438,18 @@ def render_llm_plan_diagnostics(
     return lines
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help=(
+            "append one audit-ledger record per `retry_economist (LLM plan)` "
+            "decision to results/audit_ledger.jsonl (off by default)"
+        ),
+    )
+    args = parser.parse_args(argv)
+
     transactions, store, splits = ensure_data(
         DEFAULT_DATA_DIR, seed=DEFAULT_SEED, n=DEFAULT_N, n_customers=DEFAULT_CUSTOMERS
     )
@@ -525,6 +541,19 @@ def main() -> int:
                 result=result,
             )
         )
+
+    if args.audit:
+        from retry_economist.audit.ledger import AuditLedger, audit_policy_run
+
+        ledger = AuditLedger()
+        records = audit_policy_run(
+            ledger,
+            llm_plan_policy,
+            subsample,
+            provider_label=f"gemini:{model} (SUBSAMPLE - cache replay only, no network)",
+            model=model,
+        )
+        print(f"audit: wrote {len(records)} ledger record(s) for {LLM_PLAN_POLICY_NAME!r} -> {ledger.path}")
 
     paired = run_paired_comparisons(
         reports,
