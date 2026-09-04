@@ -12,8 +12,8 @@ claim is measured against three baselines rather than asserted.
 | 1 — Synthetic data generator + counterfactual oracle | ✅ COMPLETE |
 | 2 — Evaluation harness (the scoreboard) | ✅ COMPLETE |
 | 3 — Three baselines | ✅ COMPLETE |
-| 4 — Three-signal router | 🟡 REAL MODEL PINNED, RUN IN PROGRESS — full holdout call is running in the background against a hard free-tier rate limit; partial cache only so far, see note below |
-| 5 — Economist layer (approve / veto) | ✅ COMPLETE against the historical-prior estimator, two plan sources (no LLM). LLM-priced pairing remains open, waiting on Phase 4. |
+| 4 — Three-signal router | ✅ COMPLETE (SUBSAMPLE, n=47) — real `gemini-3.5-flash-lite`, not the full 749-transaction holdout; background run never finished, see note below |
+| 5 — Economist layer (approve / veto) | ✅ COMPLETE against the historical-prior estimator, two plan sources (no LLM). LLM-priced pairing (router's plan + economist) remains open - not attempted on the subsample either, see Phase 5's "What's still open". |
 | 6 — Bounded execution + audit trail | ⬜ NOT STARTED |
 | 7 — Demo, README, architecture diagram | ⬜ NOT STARTED |
 
@@ -106,61 +106,74 @@ Paired bootstrap, same customers resampled in both arms:
 
 ---
 
-## 🟡 Phase 4 — Three-signal router (real model pinned; full run in progress)
+## ✅ Phase 4 — Three-signal router — COMPLETE (SUBSAMPLE, n=47 of 749 holdout; the background run never finished the full holdout and this section reports the 47 it did finish, not the full 749)
 
 The router **proposes only**. A `Proposal` is a distinct type from `Decision`, the
 simulator accepts only a `Decision`, and a test walks the router's syntax tree to
 assert it never constructs one. Turning a proposal into something executable
 happens in three visible lines inside the ablation policy, nowhere else.
 
-### STATUS UPDATE — 2026-09-04
+### STATUS UPDATE — 2026-09-05 — closed as a labelled subsample
 
-`GEMINI_API_KEY` is now set. `python -m retry_economist.llm.discover` ran for
+`GEMINI_API_KEY` is set. `python -m retry_economist.llm.discover` ran for
 real against the live API (not simulated) and pinned **`gemini-3.5-flash-lite`**,
 chosen as the cheapest flash-tier model with structured JSON output among 11
 candidates the API actually listed (full list, and the rejected candidates,
 in `src/retry_economist/llm/model_pin.json`, committed).
 
-A 20-transaction smoke test ran against the real model (not `MockProvider`).
-Rationales came back grounded in the specific `failure_code` / `gateway_message`
-per transaction rather than boilerplate - e.g. one proposal cited a 2.2x issuer
-failure-volume spike by name, another cited the customer's own
-`past_success_rate`. `root_cause_confidence` was 0.95 on the three inspected in
-detail, which is worth watching once the full reliability table is in.
+**The full 749-transaction holdout run never finished.** It was left running
+in the background across two sessions against a free-tier capacity limit of
+roughly 0.5 calls/minute (see the rate-limit diagnosis below), which puts a
+full run at roughly 24 hours. The background process died with the session
+that started it and was not restarted. Rather than wait further, Phase 4 is
+closed here as an honest, labelled **SUBSAMPLE** instead of a full-holdout
+result.
 
-**The full 749-transaction holdout run is in progress in the background**,
-started this session and left running per instruction. The free-tier rate limit
-is far tighter than assumed: sustained throughput is **~0.5 calls/minute**
-(42→47 cached responses over 11 minutes, confirmed against a raw diagnostic
-call with the SDK's own internal retry disabled - see the rate-limit note at
-the end of this section), which puts the full run at roughly **24 hours**, not
-the ~90 minutes originally planned. As of this update, **57 of 749**
-transactions have a real cached response. The run has not been killed and will
-keep filling the cache; every completed call is retained (see the
-resumability test, `tests/test_router.py::test_a_rate_limited_run_is_resumable_without_losing_completed_calls`),
-so nothing already answered will be re-fetched.
+**Final count of real `gemini-3.5-flash-lite` cache entries: 67 files** in
+`data/llm_cache/`. Of those, 48 distinct holdout transaction ids are
+represented; 19 of those are duplicated under two different prompt hashes
+(an earlier 20-transaction smoke test built its `SignalIndex` over just those
+20 transactions, which computes different issuer baselines and customer-day
+evidence than the full-749 context the real run used later - a different
+signal context is a different prompt, hence a different cache key for the
+"same" transaction). One further transaction's only cached entry survives
+under that stale, 20-transaction context and is not reachable from today's
+full-holdout signal context, so it is excluded rather than risking a live
+call. That leaves:
 
-**Because of this, `results/holdout_scoreboard.md` currently holds Phase 5's
-non-LLM main result (see below), not an LLM-router run** - the two experiments
-cannot share that file at the same moment, and re-running any LLM policy while
-the background job is mid-write would corrupt its cache reads. The stand-in
-tables immediately below are **preserved from the earlier mock run for
-reference only**; they describe a file that no longer exists in this state.
-Real full-holdout LLM numbers - the five-policy board, calibration, reliability,
-and five full proposals including at least one judged wrong - will replace this
-entire section once the background run finishes or is scored on whatever subset
-has cached by morning, with every other policy re-scored on that same subset
-for a fair comparison.
+> **SUBSAMPLE = 47 holdout transactions** whose real cached response is
+> reachable, right now, with **zero network calls**, by rebuilding the exact
+> prompt today's code sends (signals from a `SignalIndex` over the full
+> 749-transaction holdout - the same context the background run used).
+> **41 distinct customer clusters.** Selection logic and the full scoring run
+> are in `scripts/subsample_scoreboard.py`; full output in
+> `results/subsample_scoreboard.md` / `.json`.
 
-### 🛑 NO NUMBER BELOW THIS POINT IN THE SECTION IS AN LLM RESULT
+**Representativeness - stated rather than hidden.** The subsample is skewed
+relative to the full 749-transaction holdout, because it is exactly the
+chronological *first* ~97 transactions the background run reached before it
+was interrupted, not a random draw:
 
-The tables below are unchanged from when `GEMINI_API_KEY` was not reachable and
-the router ran on `MockProvider`: a fixed heuristic over the same facts block a
-model would receive.
+| failure code | share of SUBSAMPLE (n=47) | share of full holdout (n=749) | skew |
+| --- | ---: | ---: | ---: |
+| `51` (insufficient funds) | 29.8% | 48.1% | **-18.3 pp** |
+| `91` (bank downtime) | 27.7% | 17.2% | +10.4 pp |
+| `41` (hard decline) | 14.9% | 7.6% | +7.3 pp |
+| `MANDATE_EXPIRED_M06` | 8.5% | 4.8% | +3.7 pp |
+| `U69` | 6.4% | 4.8% | +1.6 pp |
+| `96` | 4.3% | 7.5% | -3.2 pp |
+| `R05` (risk) | 4.3% | 5.5% | -1.2 pp |
+| `ACS_TIMEOUT` | 4.3% | 4.5% | -0.3 pp |
 
-> **Every figure below was produced by that deterministic stand-in. None of it
-> is evidence about a language model. Tables are marked `[STAND-IN]`
-> individually so a number cannot be quoted out of context.**
+Insufficient-funds is undersampled by 18pp and bank-downtime / hard-decline are
+oversampled by 7-10pp each. Every number below is a SUBSAMPLE number, not a
+full-holdout estimate, and should not be read as one.
+
+A 20-transaction smoke test (the first 20 of this subsample) ran against the
+real model early on. Rationales came back grounded in the specific
+`failure_code` / `gateway_message` per transaction rather than boilerplate -
+e.g. one proposal cited a 2.2x issuer failure-volume spike by name, another
+cited the customer's own `past_success_rate`.
 
 The architecture is complete and unchanged either way — only the source of the
 proposals and probabilities differs. Adding a key requires two commands:
@@ -208,11 +221,18 @@ as a dead instrument and reporting a false conflict. Risk is now checked first.
 ### Reproducibility property
 
 Every call goes through an on-disk cache keyed by `sha256(model + prompt)`. **The
-cache is committed**, so the full evaluation replays offline with no API key:
+cache is committed**, so the full evaluation replays offline with no API key.
+On the SUBSAMPLE this is measured, not aspirational:
 
 ```
-calls=749  network=0  cache_hits=749  hit_rate=100.0%
+calls=47  network=0  cache_hits=47  hit_rate=100.0%
 ```
+
+(`results/subsample_scoreboard.md`, "Router and provider" section.) The full
+749-transaction holdout does **not** currently replay at 100%: only 47 of its
+749 prompts have a real cached response, so a full-holdout run today would
+need a network call - and the ~0.5 calls/minute capacity limit - for the
+remaining 702.
 
 A cache hit never opens a socket — asserted by a test with a call-counting
 provider. No key material is ever written to disk; a test greps the cache for it.
@@ -267,16 +287,14 @@ nothing usable." Fixed in `llm/provider.py`: 503 / `UNAVAILABLE` / "high
 demand" now get the identical backoff-then-`RateLimited` treatment as a 429,
 with a regression test
 (`tests/test_router.py::test_a_503_overload_is_treated_as_a_rate_limit_not_a_parse_failure`).
-**This fix ships in the code but not retroactively in the run already
-in progress** — that process loaded the old module before the fix landed and
-keeps running with the old classifier, since it was not restarted per
-instruction. Tomorrow's scoring step should check the background run's final
-`parse_failures` count: any transaction that got silently abstained through
-this gap deserves a re-ask (the cache will not have an entry for it under a
-fresh, correctly-classified prompt only if the prompt text also changed,
-which it did not — so a genuinely gapped transaction would show as a cached
-abstain rather than a cache miss, and is only detectable by cross-checking
-`parse_failures` against how many proposals came back with an empty plan).
+**This fix shipped in the code but not retroactively in the background run**,
+which loaded the old module before the fix landed and was never restarted.
+**Resolved by direct check rather than left as a caveat**: the SUBSAMPLE run
+(`results/subsample_scoreboard.md`, "Router and provider") reports
+`parse_failures=0` and `schema_violations=0` across all 47 real proposals -
+none of the 13 empty-plan proposals in the subsample are a silently-fabricated
+abstain from this gap; every one of them is the model genuinely returning an
+empty `proposed_plan`.
 
 ### Degradation is one-directional
 
@@ -285,44 +303,85 @@ and a counter. An action outside the allowed set, or a probability outside [0,1]
 invalidates the whole response the same way. A malfunctioning model costs nothing
 and can never spend a merchant's money. Three tests cover these paths.
 
-### `[STAND-IN]` Result — the ablation, and two null findings
+### Result — the real model, on the SUBSAMPLE (n=47)
 
-`[STAND-IN — not an LLM]`
+All numbers below are from `results/subsample_scoreboard.md`, produced by
+`python scripts/subsample_scoreboard.py`, and are **real `gemini-3.5-flash-lite`
+output, not a heuristic** - zero parse failures, zero schema violations,
+0 network calls (100% cache hit rate; see the reproducibility section above).
 
-| policy | recovery | uplift pp | acted | attempts | precision | F1 |
+Six-policy board on the SUBSAMPLE, same 47 transactions / 41 customers every arm:
+
+| policy | recovery | uplift pp | acted | attempts | decision precision | decision F1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `rules_only` | 47.9% | +24.6 | 610 | 568 | 31.0% | 45.2% |
-| `llm_router_only (NO ECONOMIST)` *[stand-in]* | 48.2% | +24.8 | 610 | 574 | 31.3% | 45.6% |
+| `do_nothing` | 23.4% | +0.0 | 0 | 0 | n/a | n/a |
+| `naive_retry_3x` | 40.4% | +17.0 | 44 | 86 | 20.5% | 34.0% |
+| `rules_only` | **53.2%** | **+29.8** | 37 | 33 | 37.8% | 52.8% |
+| `retry_economist (naive plan)` | 38.3% | +14.9 | 17 | 29 | 41.2% | 42.4% |
+| `retry_economist (prior)` | 44.7% | +21.3 | 30 | 30 | 33.3% | 43.5% |
+| `llm_router_only (NO ECONOMIST)` | 48.9% | +25.5 | 34 | 29 | 35.3% | 48.0% |
+| `oracle_best` (CHEATS) | 61.7% | +38.3 | 18 | 13 | 100% | 100% |
 
-Paired, same customers both arms:
-`llm_router_only vs rules_only` = **+0.27 pp [-0.26, +0.81]** — straddles zero.
+**Paired, same customers both arms:**
+`llm_router_only vs rules_only` = **-4.26 pp [-13.33, +4.17]** — straddles zero.
 
-**Null finding 1 — the plans are the same.** The stand-in's playbook coincides with
-the rules table, so at plan level this ablation is measuring the rules baseline
-twice. It is uninformative by construction, and stated as such rather than dressed
-up.
+**This is an underpowered comparison, reported as one, not as a win or a
+loss.** At n=47 (41 customer clusters), the confidence interval spans almost
+18 percentage points and contains zero comfortably. The point estimate says
+the real model recovered a bit less than `rules_only` on this particular
+47-transaction slice; the interval says the data cannot tell the two apart at
+this sample size. Neither "the model wins" nor "the model loses" is a
+supportable sentence here — "not enough data yet" is the honest one.
 
-**Null finding 2 — the probability estimates lose to a lookup.** Scored as
-forecasts against a per-failure-code prior fitted on the **train split only**
-(asserted by test — no holdout customer contributes):
+**Null finding 1 (holds on real data too) — the plans mostly agree with rules,
+but not entirely.** Action-by-action (`results/subsample_scoreboard.md`,
+Diagnostic 1): the model proposes `retry_next_salary_day` **9** times against
+`rules_only`'s 14 and `oracle_best`'s 3 — it leans on the liquidity-timing
+signal, but less than the rules table does. It never proposes
+`nudge_then_retry` at all on this subsample, though `rules_only` uses it
+twice. Unlike the earlier mock run (whose playbook exactly duplicated the
+rules table by construction), the real model's plan is **not** a copy of
+`rules_only`'s — it disagrees on which action to take on some transactions,
+which is what makes `wrong_action` (2, same value coincidentally as
+`rules_only`'s) a real, measured quantity here rather than structurally zero.
 
-`[STAND-IN — these Brier scores are the heuristic's, not a model's]`
+**Null finding 2 — the probability estimates still lose to a lookup, and now
+it's a real model losing, not a heuristic.** Scored as forecasts against a
+per-failure-code prior fitted on the **train split only** (1,751 transactions;
+no holdout customer contributes):
 
-| estimate | n | stand-in Brier | constant Brier | train prior Brier | beats prior? |
+| estimate | n | router (real model) Brier | constant Brier | train-only prior Brier | beats prior? |
 | --- | ---: | ---: | ---: | ---: | :---: |
-| `p_recover_if_act` | 610 | 0.2637 | 0.2858 | **0.2430** | **no** |
-| `p_recover_if_abstain` | 749 | 0.1738 | 0.1791 | **0.1685** | **no** |
+| `p_recover_if_act` | 34 | 0.2780 | 0.2962 | **0.2449** | **no** |
+| `p_recover_if_abstain` | 47 | 0.2026 | 0.1793 | **0.1587** | **no** |
 
-The stand-in's estimates beat a constant base rate but **lose to a per-code
-historical prior on both**. This is a finding about the heuristic, and it is
-**open whether a real model does better** — that is the measurement the harness
-is built to make, and it has not been made yet.
+**Stated plainly: the real model does NOT beat the train-only historical
+prior on either estimate, on this subsample.** It beats a constant base rate
+on `p_recover_if_act` but loses to it on `p_recover_if_abstain` too. This
+answers the question the STAND-IN section could only leave open: a real
+model, asked to estimate the same two probabilities, does not add information
+over a simple per-failure-code lookup table here. n=47/34 is small enough
+that this is not a final word on larger data, but it is what the real model
+actually produced, not a projection.
 
-Ten-bin reliability tables for both estimates were in `results/holdout_scoreboard.md`
-**as of the STAND-IN run**; that file now holds Phase 5's non-LLM main result
-instead (see the status update above) - the STAND-IN calibration numbers above
-are transcribed here for reference and are not currently reproducible from the
-committed `results/` directory in this state.
+**Diagnostic - `root_cause_confidence` is uninformative on this subsample.**
+All 47 real proposals returned **exactly 0.95**, with zero parse failures or
+schema violations to explain the lack of variation - the model did not
+express any granularity of doubt across 47 genuinely different transactions
+(hard declines, risk flags, bank downtime, insufficient funds all included).
+This signal carries no discriminating information here and should not be
+weighted by any downstream consumer until shown otherwise on more data.
+
+**Diagnostic - `p_recover_if_abstain` vs the true organic rate, by failure
+code** (full table in `results/subsample_scoreboard.md`, Diagnostic 3): gaps
+range from -0.35 (`ACS_TIMEOUT`, n=2) to +0.15 (`91`/bank downtime, n=13), with
+no consistent over- or under-estimation direction across codes - consistent
+with the calibration result above rather than contradicting it.
+
+Ten-bin reliability tables for both estimates are in
+`results/subsample_scoreboard.md` and reproduce from the committed cache with
+`python scripts/subsample_scoreboard.py` — no API key needed for anyone
+re-running this exact result.
 
 ## ✅ Phase 5 — COMPLETE (against the historical prior; LLM-priced pairing open)
 
@@ -572,10 +631,14 @@ asserts.
 
 ### What's still open
 
-- The LLM-priced pairing (router's plan, either estimator) waits on Phase 4's
-  background run - see the status update in that section. Adding it means
-  wiring a third plan source into `EconomistOverPlan`, not touching the
-  economist itself.
+- **The LLM-priced pairing (router's plan, either estimator) has not been
+  built.** Phase 4 closed on a labelled 47-transaction subsample (see that
+  section), and this pairing was not attempted even on that subsample -
+  it needs a third plan source wired into `EconomistOverPlan`, not touching
+  the economist itself, and was out of scope for the subsample close-out.
+  Doing it on n=47 would also inherit that subsample's skew (see Phase 4's
+  representativeness table), so it is better done once more real cache
+  coverage exists.
 
 ## ⬜ Phase 6 — Bounded execution + audit trail
 
@@ -594,8 +657,7 @@ python -m retry_economist.eval.cli --split holdout \
 python -m retry_economist.eval.cli --split holdout \
     --policies "do_nothing,naive_retry_3x,rules_only,retry_economist (prior),oracle_best" \
     --clv-sweep --discount-sweep
-python -m retry_economist.eval.cli --split holdout \
-    --policies do_nothing,naive_retry_3x,rules_only,llm_router_only,oracle_best
+python scripts/subsample_scoreboard.py   # Phase 4 close-out: real model, n=47, offline, no key needed
 python -m pytest tests -q
 ```
 
@@ -603,6 +665,12 @@ Add `--limit N` for a smoke run, `--clv-sweep` for the lifetime-value sensitivit
 report, `--discount-sweep` for the daily-discount-rate sensitivity report (only
 meaningful with `retry_economist (prior)` in `--policies`, since it re-decides
 rather than re-prices - see Phase 5), and `--seeds 42,43,44,45,46` for
-cross-seed robustness. Everything above runs offline with no API key, except
-the `llm_router_only` run, which needs `GEMINI_API_KEY` on a cold cache and
-replays offline once `data/llm_cache/` is populated.
+cross-seed robustness. Everything above runs offline with no API key.
+
+**`python -m retry_economist.eval.cli --split holdout --policies
+...,llm_router_only,...` (full 749-transaction holdout) is NOT offline today**:
+only 47 of 749 prompts are cached (see Phase 4), so it will attempt 702 live
+network calls against `GEMINI_API_KEY` and run into the same ~0.5
+calls/minute capacity limit that stopped the original background run. Use
+`scripts/subsample_scoreboard.py` for the reproducible, offline, no-key result
+on exactly the 47 transactions that are actually cached.
