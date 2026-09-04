@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from retry_economist.eval import bootstrap as bs
+from retry_economist.eval import calibration as cal
 from retry_economist.eval import metrics as mx
 from retry_economist.eval.costs import CUSTOMER_LIFETIME_VALUE_PAISE, cost_constants
 from retry_economist.eval.simulator import (
@@ -41,12 +42,20 @@ from retry_economist.eval.simulator import (
     load_observed,
     run,
 )
+from retry_economist.economist.estimator import HistoricalPriorEstimator
+from retry_economist.economist.timing import DAILY_DISCOUNT_RATE
 from retry_economist.generator.cli import generate
 from retry_economist.policies.base import ObservedTransaction, Policy
+from retry_economist.llm.cache import DEFAULT_CACHE_DIR, ResponseCache
+from retry_economist.llm.provider import CachingProvider, MockProvider, ProviderUnavailable
 from retry_economist.policies.do_nothing import DoNothingPolicy
+from retry_economist.policies.llm_router_only import LLMRouterOnlyPolicy
 from retry_economist.policies.naive_retry import NaiveRetry3xPolicy
 from retry_economist.policies.oracle_best import OracleBestPolicy
+from retry_economist.policies.retry_economist_prior import RetryEconomistPriorPolicy
 from retry_economist.policies.rules_only import RulesOnlyPolicy
+from retry_economist.router.router import Router
+from retry_economist.router.signals import SignalIndex
 
 DEFAULT_DATA_DIR = Path("data/generated")
 DEFAULT_RESULTS_DIR = Path("results")
@@ -61,6 +70,14 @@ DEFAULT_CUSTOMERS = 900
 #: Lifetime values the sensitivity sweep re-prices at: INR 4,000 / 12,000 / 30,000.
 CLV_SWEEP_PAISE: tuple[int, ...] = (400_000, 1_200_000, 3_000_000)
 
+#: Daily discount rates the sensitivity sweep RE-DECIDES at (not merely
+#: re-prices): 0.5% / 2% / 5%. Unlike CLV, this can change which plans clear
+#: the EV bar, so - see `run_discount_rate_sweep` - each point re-runs the
+#: policy rather than re-weighting a fixed set of outcomes.
+DISCOUNT_RATE_SWEEP: tuple[float, ...] = (0.005, 0.02, 0.05)
+
+RETRY_ECONOMIST_PRIOR_NAME = "retry_economist (prior)"
+
 #: Named constructors, so `--policies` takes short names and the counterfactual
 #: store is injected explicitly into anything that needs it.
 POLICY_BUILDERS: dict[str, Callable[[Mapping[str, Any]], Policy]] = {
@@ -68,6 +85,15 @@ POLICY_BUILDERS: dict[str, Callable[[Mapping[str, Any]], Policy]] = {
     "naive_retry_3x": lambda store: NaiveRetry3xPolicy(),
     "rules_only": lambda store: RulesOnlyPolicy(),
     "oracle_best": lambda store: OracleBestPolicy(_outcomes_by_txn(store)),
+}
+
+#: Policies needing the whole observed feed (not just the counterfactual store)
+#: to build their signals. Constructed separately in `build_policies`.
+FEED_POLICY_BUILDERS: dict[str, Any] = {
+    # Bound lazily: the builder is defined below, and a direct reference here
+    # would resolve at import time, before it exists.
+    "llm_router_only": lambda transactions: _build_router_policy(transactions),
+    RETRY_ECONOMIST_PRIOR_NAME: lambda transactions: _build_retry_economist_prior_policy(transactions),
 }
 
 #: The incumbent. Fixed-schedule retry is what production dunning systems
@@ -80,7 +106,82 @@ INCUMBENT_POLICY = "naive_retry_3x"
 PAIRED_COMPARISONS: tuple[tuple[str, str], ...] = (
     ("rules_only", "naive_retry_3x"),
     ("rules_only", "do_nothing"),
+    ("llm_router_only (NO ECONOMIST)", "rules_only"),
+    ("llm_router_only (NO ECONOMIST)", "naive_retry_3x"),
+    (RETRY_ECONOMIST_PRIOR_NAME, "rules_only"),
+    (RETRY_ECONOMIST_PRIOR_NAME, "naive_retry_3x"),
 )
+
+
+def build_provider(prefer_real: bool = True) -> tuple[Any, str]:
+    """The provider to route with, and a label naming it.
+
+    Falls back to the deterministic stand-in when no key or no pinned model is
+    available. The label is threaded into every report: a number produced by the
+    stand-in must never be presented as a language model result.
+    """
+    if prefer_real:
+        try:
+            from retry_economist.llm.provider import GeminiProvider
+
+            inner: Any = GeminiProvider()
+            return CachingProvider(inner, ResponseCache(DEFAULT_CACHE_DIR)), f"gemini:{inner.model}"
+        except (ProviderUnavailable, ImportError):
+            pass
+    mock = MockProvider()
+    return CachingProvider(mock, ResponseCache(DEFAULT_CACHE_DIR)), "mock-deterministic (NOT an LLM)"
+
+
+#: Populated when a routing policy is built, so the report can name the provider
+#: and quote its counters without the policy having to carry them.
+_ROUTER_CONTEXT: dict[str, Any] = {}
+
+
+def _build_router_policy(
+    transactions: Sequence[ObservedTransaction], *, prefer_real: bool = True
+) -> LLMRouterOnlyPolicy:
+    provider, label = build_provider(prefer_real)
+    router = Router(provider, SignalIndex(transactions))
+    policy = LLMRouterOnlyPolicy(router)
+    _ROUTER_CONTEXT.update({"provider": provider, "label": label, "router": router, "policy": policy})
+    return policy
+
+
+#: Populated by `main()` before `evaluate()` runs, so
+#: `_build_retry_economist_prior_policy` (a `FEED_POLICY_BUILDERS` closure that
+#: only receives `transactions`) can reach the fitted prior and the discount
+#: rate for this run - same pattern as `_ROUTER_CONTEXT` above.
+_PRIOR_CONTEXT: dict[str, Any] = {}
+
+
+def historical_prior_estimator(prior: cal.HistoricalPrior) -> HistoricalPriorEstimator:
+    """Unpack a fitted `HistoricalPrior` into the plain-data estimator the
+    economist package accepts - see `economist/estimator.py`'s docstring for
+    why the unpacking happens here rather than inside that package."""
+    return HistoricalPriorEstimator(
+        abstain_by_code=dict(prior.abstain_by_code),
+        act_by_code_action=dict(prior.act_by_code_action),
+        act_by_code=dict(prior.act_by_code),
+        global_abstain=prior.global_abstain,
+        global_act=prior.global_act,
+    )
+
+
+def _build_retry_economist_prior_policy(
+    transactions: Sequence[ObservedTransaction],
+) -> RetryEconomistPriorPolicy:
+    estimator = _PRIOR_CONTEXT.get("estimator")
+    if estimator is None:
+        raise SystemExit(
+            f"{RETRY_ECONOMIST_PRIOR_NAME!r} needs a historical prior fitted on train data "
+            "before it can be built; this is an internal ordering bug in main()"
+        )
+    rate = _PRIOR_CONTEXT.get("daily_discount_rate", DAILY_DISCOUNT_RATE)
+    policy = RetryEconomistPriorPolicy(
+        SignalIndex(transactions), estimator, daily_discount_rate=rate
+    )
+    _PRIOR_CONTEXT["policy"] = policy
+    return policy
 
 
 def _outcomes_by_txn(store: Mapping[str, Any]) -> dict[str, Any]:
@@ -183,14 +284,22 @@ def _ci_pp(ci: bs.ConfidenceInterval) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_policies(names: Sequence[str], store: Mapping[str, Any]) -> list[Policy]:
+def build_policies(
+    names: Sequence[str],
+    store: Mapping[str, Any],
+    transactions: Sequence[ObservedTransaction] | None = None,
+) -> list[Policy]:
     policies: list[Policy] = []
+    known = set(POLICY_BUILDERS) | set(FEED_POLICY_BUILDERS)
     for name in names:
-        if name not in POLICY_BUILDERS:
-            raise SystemExit(
-                f"unknown policy {name!r}; available: {', '.join(sorted(POLICY_BUILDERS))}"
-            )
-        policies.append(POLICY_BUILDERS[name](store))
+        if name in FEED_POLICY_BUILDERS:
+            if transactions is None:
+                raise SystemExit(f"policy {name!r} needs the observed feed to build its signals")
+            policies.append(FEED_POLICY_BUILDERS[name](transactions))
+        elif name in POLICY_BUILDERS:
+            policies.append(POLICY_BUILDERS[name](store))
+        else:
+            raise SystemExit(f"unknown policy {name!r}; available: {', '.join(sorted(known))}")
     return policies
 
 
@@ -205,7 +314,7 @@ def evaluate(
     clv_paise: int = CUSTOMER_LIFETIME_VALUE_PAISE,
 ) -> list[PolicyReport]:
     reports: list[PolicyReport] = []
-    for policy in build_policies(policy_names, store):
+    for policy in build_policies(policy_names, store, transactions):
         result = run(policy, transactions, store, split=split)
         reports.append(
             PolicyReport(
@@ -465,25 +574,85 @@ def sweep_conclusion(rows: Sequence[dict[str, Any]]) -> str:
     )
 
 
+def run_discount_rate_sweep(
+    transactions: Sequence[ObservedTransaction],
+    store: Mapping[str, Any],
+    prior: cal.HistoricalPrior,
+    split: str,
+    *,
+    rates: Sequence[float] = DISCOUNT_RATE_SWEEP,
+    clv_paise: int = CUSTOMER_LIFETIME_VALUE_PAISE,
+    reports: Sequence[PolicyReport] = (),
+) -> list[dict[str, Any]]:
+    """Re-DECIDE `retry_economist (prior)` at several daily discount rates.
+
+    Cannot be a re-pricing of fixed outcomes the way `run_clv_sweep` is: the
+    discount rate sits inside the EV threshold the economist checks BEFORE
+    anything executes (see `economist/economist.py::compute_ev`), so a
+    different rate can approve, truncate or veto a different set of
+    transactions outright. Each point below builds a fresh policy at that
+    rate and re-runs the simulator from scratch.
+    """
+    estimator = historical_prior_estimator(prior)
+    baseline_uplift = {r.name: r.metrics.net_uplift_pp for r in reports if not r.is_reference_bound}
+
+    points: list[dict[str, Any]] = []
+    for rate in rates:
+        policy = RetryEconomistPriorPolicy(
+            SignalIndex(transactions), estimator, daily_discount_rate=rate
+        )
+        result = run(policy, transactions, store, split=split)
+        m = mx.compute_for_run(result, clv_paise=clv_paise)
+        points.append(
+            {
+                "daily_discount_rate": rate,
+                "recovery_rate": round(m.recovery_rate, 4),
+                "net_uplift_pp": round(m.net_uplift_pp, 3),
+                "net_value_rupees": round(m.net_value_rupees, 2),
+                "action_rate": round(m.action_rate, 4),
+            }
+        )
+
+    advantage_over: dict[str, dict[str, Any]] = {}
+    for baseline_name in ("rules_only", "naive_retry_3x"):
+        base = baseline_uplift.get(baseline_name)
+        if base is None:
+            continue
+        advantage_over[baseline_name] = {
+            "baseline_net_uplift_pp": round(base, 3),
+            "advantage_survives_all_rates": all(p["net_uplift_pp"] > base for p in points),
+        }
+
+    return [
+        {
+            "policy": RETRY_ECONOMIST_PRIOR_NAME,
+            "points": points,
+            "advantage_over": advantage_over,
+        }
+    ]
+
+
 # ---------------------------------------------------------------------------
 # rendering
 # ---------------------------------------------------------------------------
 
 _RESULTS_HEADER = (
     "| policy | status | decision precision | decision recall | decision F1 | "
+    "addressable capture | action selection error | "
     "precision (INR-wt) | recall (INR-wt) | F1 (INR-wt) | "
     "recovery rate (95% CI) | net uplift pp (95% CI) | "
     "recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | "
     "action rate | abstained | restraint precision | net INR | cost INR | net value INR | "
     "INR spent per INR earned | attempts | contact | viol |"
 )
-_RESULTS_RULE = "| --- | --- |" + " ---: |" * 21
+_RESULTS_RULE = "| --- | --- |" + " ---: |" * 23
 
 _ATTRIB_HEADER = (
-    "| policy | acted | incremental | cannibalised | wasted | futile | abstained | "
-    "correct restraint | correct walkaway | missed opportunity | sum |"
+    "| policy | acted | incremental | cannibalised | wasted | futile (hopeless) | "
+    "futile (wrong action) | abstained | correct restraint | correct walkaway | "
+    "missed opportunity | sum |"
 )
-_ATTRIB_RULE = "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+_ATTRIB_RULE = "| --- |" + " ---: |" * 11
 
 
 def _results_row(report: PolicyReport) -> str:
@@ -491,7 +660,9 @@ def _results_row(report: PolicyReport) -> str:
     d, rd = m.decision, m.rupee_decision
     return (
         f"| `{report.name}` | {report.status} | {_rate(d.precision)} | {_rate(d.recall)} | "
-        f"{_rate(d.f1)} | {_rate(rd.precision)} | {_rate(rd.recall)} | {_rate(rd.f1)} | "
+        f"{_rate(d.f1)} | {_rate(m.addressable_capture_rate)} | "
+        f"{_rate(m.action_selection_error_rate)} | "
+        f"{_rate(rd.precision)} | {_rate(rd.recall)} | {_rate(rd.f1)} | "
         f"{_ci_pct(report.ci.recovery_rate)} | "
         f"{_ci_pp(report.ci.net_uplift_pp)} | {_pct(m.rupee_recovery_rate)} | "
         f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery, m)} | "
@@ -517,7 +688,8 @@ def _attribution_row(report: PolicyReport) -> str:
     )
     return (
         f"| `{report.name}` | {m.n_acted} | {m.incremental.count} | {m.cannibalised.count} | "
-        f"{m.wasted.count} | {m.futile.count} | {m.n_abstained} | {m.correct_restraint.count} | "
+        f"{m.wasted.count} | {m.futile_hopeless.count} | {m.wrong_action.count} | "
+        f"{m.n_abstained} | {m.correct_restraint.count} | "
         f"{m.correct_walkaway.count} | {m.missed_opportunity.count} | {total}/{m.n} |"
     )
 
@@ -552,24 +724,28 @@ def _per_mode_table(report: PolicyReport) -> list[str]:
     lines = [
         f"#### `{report.name}` by failure code",
         "",
-        "| failure code | n | precision | recall | F1 | precision (INR-wt) | recall (INR-wt) | "
+        "| failure code | n | precision | recall | F1 | addressable | capture | "
+        "selection error | precision (INR-wt) | recall (INR-wt) | "
         "F1 (INR-wt) | recovery | organic | uplift pp | recovery (INR-wt) | "
         "uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | "
-        "missed | restraint precision | net INR | attempts |",
-        "| --- | ---: |" + " ---: |" * 20,
+        "hopeless | wrong action | missed | restraint precision | net INR | attempts |",
+        "| --- | ---: |" + " ---: |" * 25,
     ]
     for code, m in sorted(
         report.metrics.per_failure_code.items(), key=lambda kv: (-kv[1].n, kv[0])
     ):
         lines.append(
             f"| `{code}` | {m.n} | {_rate(m.decision.precision)} | {_rate(m.decision.recall)} | "
-            f"{_rate(m.decision.f1)} | {_rate(m.rupee_decision.precision)} | "
+            f"{_rate(m.decision.f1)} | {m.total_addressable} | "
+            f"{_rate(m.addressable_capture_rate)} | {_rate(m.action_selection_error_rate)} | "
+            f"{_rate(m.rupee_decision.precision)} | "
             f"{_rate(m.rupee_decision.recall)} | {_rate(m.rupee_decision.f1)} | "
             f"{_pct(m.recovery_rate)} | {_pct(m.organic_rate)} | "
             f"{m.net_uplift_pp:+.1f} | {_pct(m.rupee_recovery_rate)} | "
             f"{m.rupee_net_uplift_pp:+.1f} | {_days(m.median_days_to_recovery, m)} | "
             f"{_days(m.mean_days_to_recovery, m)} | {_pct(m.recovered_within_72h_rate)} | "
             f"{m.incremental.count} | {m.cannibalised.count} | "
+            f"{m.futile_hopeless.count} | {m.wrong_action.count} | "
             f"{m.missed_opportunity.count} | {_rate(m.restraint_precision)} | "
             f"{_money(m.net_rupees)} | {m.total_attempts} |"
         )
@@ -591,6 +767,11 @@ def render_markdown(
     paired: Sequence[dict[str, Any]] | None = None,
     multiseed: Sequence[dict[str, Any]] | None = None,
     clv_sweep: Sequence[dict[str, Any]] | None = None,
+    discount_sweep: Sequence[dict[str, Any]] | None = None,
+    calibration: Any = None,
+    provider: str | None = None,
+    router_stats: dict[str, Any] | None = None,
+    provider_stats: dict[str, Any] | None = None,
 ) -> str:
     honest = [r for r in reports if not r.is_reference_bound]
     bounds = [r for r in reports if r.is_reference_bound]
@@ -607,6 +788,9 @@ def render_markdown(
         f"- generator hash: `{generator_hash()}`",
         f"- bootstrap: {iterations} clustered iterations (resampling customers), "
         f"seed `{bootstrap_seed}`",
+        *( [
+            f"- LLM provider: **{provider}**",
+        ] if provider else []),
         f"- recoverable ceiling: **{_pct(ceilings.cap_limited)}** within debit-attempt caps, "
         f"{_pct(ceilings.cap_free)} ignoring them "
         f"(scheme caps cost {ceilings.cost_of_caps_pp:.1f} pp of recovery outright)",
@@ -653,7 +837,14 @@ def render_markdown(
         "leaving a customer alone who pays unaided, or one no available action could "
         "have recovered, is the system working - at zero cost. "
         "**Restraint precision** is the share of untouched transactions that fall in "
-        "those two buckets.",
+        "those two buckets."
+        "\n\n"
+        "`futile` is split by whose mistake it was. **hopeless** means no affordable "
+        "action would ever have recovered it, so the spend should not have been "
+        "authorised at all - an economics failure. **wrong action** means the "
+        "opportunity was real and the wrong action was chosen - a routing failure. "
+        "`action selection error` is the second as a share of the transactions the "
+        "policy was right to act on.",
         "",
         _ATTRIB_HEADER,
         _ATTRIB_RULE,
@@ -682,6 +873,15 @@ def render_markdown(
 
     if clv_sweep:
         lines += render_clv_sweep(clv_sweep)
+
+    if discount_sweep:
+        lines += render_discount_sweep(discount_sweep)
+
+    if router_stats or provider_stats:
+        lines += render_router_stats(router_stats, provider_stats, provider)
+
+    if calibration is not None:
+        lines += render_calibration(calibration)
 
     lines += [
         "## Cost assumptions",
@@ -760,6 +960,127 @@ def render_clv_sweep(rows: Sequence[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def render_discount_sweep(rows: Sequence[dict[str, Any]]) -> list[str]:
+    lines = [
+        "## Sensitivity to the daily discount rate",
+        "",
+        f"`{RETRY_ECONOMIST_PRIOR_NAME}` is RE-DECIDED at each rate, not re-priced like "
+        "the CLV sweep above: the discount factor sits inside the EV threshold the "
+        "economist checks before anything executes, so a different rate can change "
+        "which transactions are approved, truncated or vetoed outright - the "
+        "executed plans differ, not just how a fixed set of plans is valued.",
+        "",
+        "| daily rate | recovery | net uplift pp | net value INR | action rate |",
+        "| --- | ---: | ---: | ---: | ---: |",
+    ]
+    for row in rows:
+        for point in row["points"]:
+            lines.append(
+                f"| {point['daily_discount_rate']:.3f} | {_pct(point['recovery_rate'])} | "
+                f"{point['net_uplift_pp']:+.2f} | {_money(point['net_value_rupees'])} | "
+                f"{_pct(point['action_rate'])} |"
+            )
+        lines.append("")
+        for baseline, info in row["advantage_over"].items():
+            verdict = (
+                "SURVIVES every rate tested"
+                if info["advantage_survives_all_rates"]
+                else "DOES NOT SURVIVE every rate tested"
+            )
+            lines.append(
+                f"> vs `{baseline}` (net uplift {info['baseline_net_uplift_pp']:+.2f} pp): "
+                f"advantage {verdict}."
+            )
+        lines.append("")
+    return lines
+
+
+def render_router_stats(
+    router_stats: dict[str, Any] | None,
+    provider_stats: dict[str, Any] | None,
+    provider: str | None,
+) -> list[str]:
+    lines = ["## Router and provider", ""]
+    if provider and "mock" in provider:
+        lines += [
+            "> **These proposals did NOT come from a language model.** No API key was "
+            "available, so the deterministic stand-in produced them. The architecture is "
+            "identical - only the source of the proposals and probabilities differs - but "
+            "nothing here is evidence about what an LLM would do.",
+            "",
+        ]
+    lines += [f"- provider: `{provider}`"] if provider else []
+    if router_stats:
+        lines += [
+            f"- proposals: {router_stats['proposals']}",
+            f"- parse failures (degraded to abstain): **{router_stats['parse_failures']}**",
+            f"- schema violations (degraded to abstain): {router_stats['schema_violations']}",
+            f"- abstain proposals: {router_stats['abstain_proposals']}",
+        ]
+    if provider_stats:
+        cache = provider_stats.get("cache", {})
+        hit_rate = cache.get("hit_rate")
+        lines += [
+            f"- calls: {provider_stats['calls']} "
+            f"({provider_stats['network_calls']} reached the provider)",
+            f"- cache hit rate: {'n/a' if hit_rate is None else _pct(hit_rate)} "
+            f"({cache.get('hits', 0)} hits / {cache.get('misses', 0)} misses)",
+            f"- mean latency: {provider_stats.get('mean_latency_seconds')}s per call",
+        ]
+    lines.append("")
+    return lines
+
+
+def render_calibration(report: Any) -> list[str]:
+    lines = [
+        "## Calibration of the router's probability estimates",
+        "",
+        "The plan is replaceable - a lookup table produces good plans. The probabilities "
+        "are not: the economist layer cannot compute an expected value without them. So "
+        "they are scored as forecasts, against a constant base rate and against a "
+        "per-failure-code historical prior **fitted on the train split only** "
+        f"({report.prior_fitted_on} transactions). Lower Brier is better.",
+        "",
+        "| estimate | n scored | base rate | router Brier | constant Brier | "
+        "historical prior Brier | beats prior? |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | :---: |",
+    ]
+    for score in (report.act, report.abstain):
+        if score.router_brier is None:
+            lines.append(f"| `{score.label}` | 0 | - | - | - | - | - |")
+            continue
+        lines.append(
+            f"| `{score.label}` | {score.n} | {score.base_rate:.4f} | "
+            f"{score.router_brier:.4f} | {score.constant_brier:.4f} | "
+            f"{score.historical_brier:.4f} | "
+            f"{'**yes**' if score.beats_historical else 'no'} |"
+        )
+    lines.append("")
+    for verdict in report.verdicts():
+        lines.append(f"> {verdict}")
+    lines.append("")
+
+    for score in (report.act, report.abstain):
+        if score.router_brier is None:
+            continue
+        lines += [
+            f"### Reliability - `{score.label}`",
+            "",
+            "| predicted bin | n | mean predicted | observed frequency | gap |",
+            "| --- | ---: | ---: | ---: | ---: |",
+        ]
+        for b in score.reliability:
+            row = b.to_dict()
+            if row["count"] == 0:
+                continue
+            lines.append(
+                f"| {row['bin']} | {row['count']} | {row['mean_predicted']:.3f} | "
+                f"{row['observed_frequency']:.3f} | {row['gap']:+.3f} |"
+            )
+        lines.append("")
+    return lines
+
+
 def render_json(
     reports: Sequence[PolicyReport],
     *,
@@ -774,6 +1095,11 @@ def render_json(
     paired: Sequence[dict[str, Any]] | None = None,
     multiseed: Sequence[dict[str, Any]] | None = None,
     clv_sweep: Sequence[dict[str, Any]] | None = None,
+    discount_sweep: Sequence[dict[str, Any]] | None = None,
+    calibration: Any = None,
+    provider: str | None = None,
+    router_stats: dict[str, Any] | None = None,
+    provider_stats: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "split": split,
@@ -797,6 +1123,10 @@ def render_json(
             }
             for r in reports
         ],
+        "provider": provider,
+        "router_stats": router_stats or {},
+        "provider_stats": provider_stats or {},
+        "calibration": calibration.to_dict() if calibration is not None else {},
         "paired_comparisons": list(paired) if paired else [],
         "multiseed": list(multiseed) if multiseed else [],
         "clv_sweep": {
@@ -805,6 +1135,7 @@ def render_json(
         }
         if clv_sweep
         else {},
+        "discount_rate_sweep": list(discount_sweep) if discount_sweep else [],
     }
 
 
@@ -823,22 +1154,24 @@ def print_stdout(
     )
     print()
     decisions = (
-        f"{'policy':<24} {'status':<8} | {'precis':>7} {'recall':>7} {'F1':>7} "
-        f"| {'precis$':>7} {'recall$':>7} {'F1$':>7}"
+        f"{'policy':<31} {'status':<8} | {'precis':>7} {'recall':>7} {'F1':>7} "
+        f"| {'capture':>7} {'sel.err':>7} | {'precis$':>7} {'recall$':>7} {'F1$':>7}"
     )
     print(decisions)
     print("-" * len(decisions))
     for report in reports:
         d, rd = report.metrics.decision, report.metrics.rupee_decision
         print(
-            f"{report.name:<24} {report.status:<8} | {_rate(d.precision):>7} "
-            f"{_rate(d.recall):>7} {_rate(d.f1):>7} | {_rate(rd.precision):>7} "
-            f"{_rate(rd.recall):>7} {_rate(rd.f1):>7}"
+            f"{report.name:<31} {report.status:<8} | {_rate(d.precision):>7} "
+            f"{_rate(d.recall):>7} {_rate(d.f1):>7} "
+            f"| {_rate(report.metrics.addressable_capture_rate):>7} "
+            f"{_rate(report.metrics.action_selection_error_rate):>7} "
+            f"| {_rate(rd.precision):>7} {_rate(rd.recall):>7} {_rate(rd.f1):>7}"
         )
     print()
 
     header = (
-        f"{'policy':<24} {'status':<8} {'recovery':>9} {'uplift':>7} {'act%':>6} "
+        f"{'policy':<31} {'status':<8} {'recovery':>9} {'uplift':>7} {'act%':>6} "
         f"{'abst':>5} {'restr.p':>8} {'net INR':>11} {'cost INR':>10} {'net value':>12} "
         f"{'INR/INR':>8} {'att':>5} {'viol':>5}"
     )
@@ -848,7 +1181,7 @@ def print_stdout(
     def emit(report: PolicyReport) -> None:
         m = report.metrics
         print(
-            f"{report.name:<24} {report.status:<8} {_pct(m.recovery_rate):>9} "
+            f"{report.name:<31} {report.status:<8} {_pct(m.recovery_rate):>9} "
             f"{m.net_uplift_pp:>+7.1f} {_pct(m.action_rate):>6} {m.n_abstained:>5} "
             f"{_rate(m.restraint_precision):>8} {_money(m.net_rupees):>11} "
             f"{_money(m.total_cost_rupees + m.annoyance_cost_rupees):>10} "
@@ -867,22 +1200,23 @@ def print_stdout(
 
     print()
     attrib = (
-        f"{'policy':<24} | {'acted':>5} {'incr':>5} {'cannib':>6} {'wasted':>6} {'futile':>6} "
-        f"| {'abst':>5} {'restraint':>9} {'walkaway':>8} {'missed':>6}"
+        f"{'policy':<31} | {'acted':>5} {'incr':>5} {'cannib':>6} {'wasted':>6} "
+        f"{'hopeles':>7} {'wrongAct':>8} | {'abst':>5} {'restraint':>9} {'walkaway':>8} "
+        f"{'missed':>6}"
     )
     print(attrib)
     print("-" * len(attrib))
     for report in reports:
         m = report.metrics
         print(
-            f"{report.name:<24} | {m.n_acted:>5} {m.incremental.count:>5} "
-            f"{m.cannibalised.count:>6} {m.wasted.count:>6} {m.futile.count:>6} "
-            f"| {m.n_abstained:>5} {m.correct_restraint.count:>9} "
+            f"{report.name:<31} | {m.n_acted:>5} {m.incremental.count:>5} "
+            f"{m.cannibalised.count:>6} {m.wasted.count:>6} {m.futile_hopeless.count:>7} "
+            f"{m.wrong_action.count:>8} | {m.n_abstained:>5} {m.correct_restraint.count:>9} "
             f"{m.correct_walkaway.count:>8} {m.missed_opportunity.count:>6}"
         )
     print()
     timing = (
-        f"{'policy':<24} | {'recovery':>8} {'INR-wt':>8} | {'uplift':>7} {'INR-wt':>7} "
+        f"{'policy':<31} | {'recovery':>8} {'INR-wt':>8} | {'uplift':>7} {'INR-wt':>7} "
         f"| {'med days':>8} {'mean days':>9} {'<=72h':>7}"
     )
     print(timing)
@@ -890,7 +1224,7 @@ def print_stdout(
     for report in reports:
         m = report.metrics
         print(
-            f"{report.name:<24} | {_pct(m.recovery_rate):>8} {_pct(m.rupee_recovery_rate):>8} "
+            f"{report.name:<31} | {_pct(m.recovery_rate):>8} {_pct(m.rupee_recovery_rate):>8} "
             f"| {m.net_uplift_pp:>+7.1f} {m.rupee_net_uplift_pp:>+7.1f} "
             f"| {_days(m.median_days_to_recovery, m):>8} {_days(m.mean_days_to_recovery, m):>9} "
             f"{_pct(m.recovered_within_72h_rate):>7}"
@@ -935,7 +1269,7 @@ def run_multiseed(
                 out, seed=seed, n=n, n_customers=n_customers
             )
             subset = filter_split(transactions, splits, split)
-            for policy in build_policies(policy_names, store):
+            for policy in build_policies(policy_names, store, subset):
                 result = run(policy, subset, store, split=split)
                 collected.setdefault(policy.name, []).append(
                     mx.compute_for_run(result, clv_paise=clv_paise)
@@ -997,6 +1331,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--n", type=int, default=DEFAULT_N)
     parser.add_argument("--customers", type=int, default=DEFAULT_CUSTOMERS)
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="score only the first N transactions of the split - use for smoke tests "
+        "before spending API quota on the whole holdout",
+    )
+    parser.add_argument(
+        "--mock-llm",
+        action="store_true",
+        help="force the deterministic stand-in even if a key and pinned model exist",
+    )
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_RESULTS_DIR)
     parser.add_argument("--iterations", type=int, default=bs.DEFAULT_ITERATIONS)
@@ -1005,6 +1351,20 @@ def main(argv: list[str] | None = None) -> int:
         "--clv-sweep",
         action="store_true",
         help="re-price every policy at CLV 4,000 / 12,000 / 30,000 INR and report what moves",
+    )
+    parser.add_argument(
+        "--discount-sweep",
+        action="store_true",
+        help=(
+            f"re-DECIDE {RETRY_ECONOMIST_PRIOR_NAME!r} at daily discount rates "
+            f"{DISCOUNT_RATE_SWEEP} and report whether its advantage survives"
+        ),
+    )
+    parser.add_argument(
+        "--discount-rate",
+        type=float,
+        default=DAILY_DISCOUNT_RATE,
+        help=f"daily discount rate for {RETRY_ECONOMIST_PRIOR_NAME!r} (default {DAILY_DISCOUNT_RATE})",
     )
     args = parser.parse_args(argv)
 
@@ -1018,6 +1378,25 @@ def main(argv: list[str] | None = None) -> int:
     subset = filter_split(transactions, splits, args.split)
     if not subset:
         raise SystemExit(f"split {args.split!r} contains no transactions")
+    if args.limit is not None:
+        # Sorted by time already, so a limit takes a contiguous slice of the
+        # feed rather than a random sample - the signals depend on neighbours.
+        subset = subset[: args.limit]
+        print(f"NOTE: --limit {args.limit} in effect; scoring {len(subset)} transactions only")
+    _ROUTER_CONTEXT["prefer_real"] = not args.mock_llm
+
+    # The prior is fitted on TRAIN only, once, and reused everywhere a
+    # historical prior is needed this run (the combined policy, and the
+    # router's own calibration report below). Fitting it on the split being
+    # scored would let it see the outcomes it is being graded against.
+    train = filter_split(transactions, splits, "train")
+    fitted_prior: cal.HistoricalPrior | None = None
+    if RETRY_ECONOMIST_PRIOR_NAME in policy_names or "llm_router_only" in policy_names:
+        fitted_prior = cal.HistoricalPrior.fit(train, store)
+    if RETRY_ECONOMIST_PRIOR_NAME in policy_names:
+        _PRIOR_CONTEXT["estimator"] = historical_prior_estimator(fitted_prior)
+        _PRIOR_CONTEXT["daily_discount_rate"] = args.discount_rate
+        _PRIOR_CONTEXT["prior"] = fitted_prior
 
     reports = evaluate(
         policy_names,
@@ -1039,6 +1418,17 @@ def main(argv: list[str] | None = None) -> int:
         reports, iterations=args.iterations, seed=args.bootstrap_seed
     )
     clv_sweep = run_clv_sweep(reports) if args.clv_sweep else None
+    discount_sweep = (
+        run_discount_rate_sweep(subset, store, fitted_prior, args.split, reports=reports)
+        if args.discount_sweep and fitted_prior is not None
+        else None
+    )
+
+    calibration = None
+    policy = _ROUTER_CONTEXT.get("policy")
+    if policy is not None and policy.proposals:
+        prior = fitted_prior if fitted_prior is not None else cal.HistoricalPrior.fit(train, store)
+        calibration = cal.evaluate(cal.build_records(policy.proposals, subset, store), prior)
 
     common = {
         "split": args.split,
@@ -1049,8 +1439,17 @@ def main(argv: list[str] | None = None) -> int:
         "bootstrap_seed": args.bootstrap_seed,
         "ceilings": mx.ceilings(subset, store),
         "paired": paired,
+        "calibration": calibration,
+        "provider": _ROUTER_CONTEXT.get("label"),
+        "router_stats": (
+            _ROUTER_CONTEXT["router"].stats.to_dict() if "router" in _ROUTER_CONTEXT else None
+        ),
+        "provider_stats": (
+            _ROUTER_CONTEXT["provider"].report() if "provider" in _ROUTER_CONTEXT else None
+        ),
         "multiseed": multiseed,
         "clv_sweep": clv_sweep,
+        "discount_sweep": discount_sweep,
     }
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -1080,7 +1479,7 @@ def main(argv: list[str] | None = None) -> int:
         print("robustness across seeds:")
         for row in multiseed:
             print(
-                f"  {row['policy']:<24} recovery {_pct(row['recovery_rate_mean'])} "
+                f"  {row['policy']:<31} recovery {_pct(row['recovery_rate_mean'])} "
                 f"[{_pct(row['recovery_rate_min'])}, {_pct(row['recovery_rate_max'])}]  "
                 f"uplift {row['net_uplift_pp_mean']:+.1f} pp"
             )
@@ -1092,9 +1491,54 @@ def main(argv: list[str] | None = None) -> int:
                 f"INR{p['clv_rupees'] / 1000:.0f}k: {_money(p['net_value_rupees'])}"
                 for p in row["points"]
             )
-            print(f"  {row['policy']:<24} net value  {values}")
+            print(f"  {row['policy']:<31} net value  {values}")
         print(f"  => {sweep_conclusion(clv_sweep)}")
         print()
+    if discount_sweep:
+        print("daily discount rate sensitivity (RE-DECIDED, not re-priced):")
+        for row in discount_sweep:
+            values = "  ".join(
+                f"{p['daily_discount_rate']:.3f}: uplift {p['net_uplift_pp']:+.2f}pp"
+                for p in row["points"]
+            )
+            print(f"  {row['policy']:<31} {values}")
+            for baseline, info in row["advantage_over"].items():
+                mark = "survives" if info["advantage_survives_all_rates"] else "DOES NOT survive"
+                print(f"    vs {baseline}: advantage {mark} every rate tested")
+        print()
+    if "router" in _ROUTER_CONTEXT:
+        router_stats = _ROUTER_CONTEXT["router"].stats.to_dict()
+        provider_report = _ROUTER_CONTEXT["provider"].report()
+        cache = provider_report["cache"]
+        print(f"router: provider={_ROUTER_CONTEXT['label']}")
+        print(
+            f"  proposals={router_stats['proposals']} "
+            f"parse_failures={router_stats['parse_failures']} "
+            f"schema_violations={router_stats['schema_violations']} "
+            f"abstains={router_stats['abstain_proposals']}"
+        )
+        print(
+            f"  calls={provider_report['calls']} network={provider_report['network_calls']} "
+            f"cache_hits={cache['hits']} cache_misses={cache['misses']} "
+            f"hit_rate={'n/a' if cache['hit_rate'] is None else _pct(cache['hit_rate'])} "
+            f"mean_latency={provider_report['mean_latency_seconds']}s"
+        )
+        print()
+
+    if calibration is not None:
+        print("calibration (Brier, lower is better):")
+        for score in (calibration.act, calibration.abstain):
+            if score.router_brier is None:
+                print(f"  {score.label:<22} no scored transactions")
+                continue
+            print(
+                f"  {score.label:<22} n={score.n:<5} router={score.router_brier:.4f}  "
+                f"constant={score.constant_brier:.4f}  "
+                f"prior(train)={score.historical_brier:.4f}  "
+                f"{'BEATS prior' if score.beats_historical else 'does NOT beat prior'}"
+            )
+        print()
+
     print(f"wrote {md_path}")
     print(f"wrote {json_path}")
     return 0

@@ -58,10 +58,12 @@ SCALES = ((800, 300), (2500, 900))
 #: constructor argument, and the scoreboard prints it in a quarantined section.
 LEAKAGE_ALLOWLIST = {"oracle_best.py"}
 
-#: Directories whose contents must stay blind to the counterfactual store.
-#: `router` and `economist` do not exist yet; they are listed now so the guard
-#: covers them the moment Phase 3 creates them.
-GUARDED_PACKAGES = ("policies", "router", "economist")
+#: Directories whose contents must stay blind to the counterfactual store. The
+#: rule is transitive: a policy that could reach the answers through the router
+#: or the LLM layer would leak just as surely as one that opened the file.
+#: `economist` does not exist yet; it is listed so the guard covers it the
+#: moment Phase 5 creates it.
+GUARDED_PACKAGES = ("policies", "router", "economist", "llm")
 
 
 # ---------------------------------------------------------------------------
@@ -780,3 +782,95 @@ def test_empty_and_zero_recovery_slices_render_differently(dataset: dict) -> Non
     real = mx.compute_for_run(_run(DoNothingPolicy(), dataset, split="all"))
     assert _days(real.median_days_to_recovery, real) not in {"-", "n/a (0 recovered)"}
     assert real.to_dict()["timing"]["n_recovered"] == real.n_recovered > 0
+
+
+# ---------------------------------------------------------------------------
+# the futile split
+# ---------------------------------------------------------------------------
+
+
+def test_futile_split_is_exhaustive_and_partitions_n(dataset: dict) -> None:
+    """The split refines the seven buckets without disturbing them.
+
+    Extends the existing exhaustiveness guarantee rather than replacing it: the
+    original seven must still sum to n, AND the eight-way partition that expands
+    `futile` into its two children must sum to n as well.
+    """
+    policies = [
+        DoNothingPolicy(),
+        OracleBestPolicy(dataset["outcomes_by_txn"]),
+        _CapBustingPolicy(),
+    ]
+    for policy in policies:
+        m = mx.compute_for_run(_run(policy, dataset, split="all"))
+
+        # The parent still holds, exactly.
+        assert m.futile_hopeless.count + m.wrong_action.count == m.futile.count
+        assert m.futile_hopeless.paise + m.wrong_action.paise == m.futile.paise
+
+        seven = (
+            m.incremental,
+            m.cannibalised,
+            m.wasted,
+            m.futile,
+            m.correct_restraint,
+            m.correct_walkaway,
+            m.missed_opportunity,
+        )
+        eight = (
+            m.incremental,
+            m.cannibalised,
+            m.wasted,
+            m.futile_hopeless,
+            m.wrong_action,
+            m.correct_restraint,
+            m.correct_walkaway,
+            m.missed_opportunity,
+        )
+        assert sum(b.count for b in seven) == m.n
+        assert sum(b.count for b in eight) == m.n
+        assert sum(b.paise for b in eight) == round(m.total_rupees_at_risk * 100)
+
+        for code, sub in m.per_failure_code.items():
+            assert (
+                sub.futile_hopeless.count + sub.wrong_action.count == sub.futile.count
+            ), code
+
+
+def test_addressable_denominator_is_a_property_of_the_data(dataset: dict) -> None:
+    """Every policy is judged against the same pool of winnable transactions.
+
+    If the denominator moved with the policy, each would be grading its own
+    homework and capture rates would not be comparable.
+    """
+    totals = {
+        policy.name: mx.compute_for_run(_run(policy, dataset, split="all")).total_addressable
+        for policy in (
+            DoNothingPolicy(),
+            OracleBestPolicy(dataset["outcomes_by_txn"]),
+            _CapBustingPolicy(),
+        )
+    }
+    assert len(set(totals.values())) == 1, f"denominator varies by policy: {totals}"
+    assert next(iter(totals.values())) > 0
+
+
+def test_capture_and_selection_error_behave(dataset: dict) -> None:
+    """The two new rates say what they claim, at the extremes."""
+    bound = mx.compute_for_run(
+        _run(OracleBestPolicy(dataset["outcomes_by_txn"]), dataset, split="all")
+    )
+    # The cheating bound picks a known-good action every time it acts, so it
+    # never mis-selects and it captures the whole addressable pool.
+    assert bound.wrong_action.count == 0
+    assert bound.action_selection_error_rate == 0.0
+    assert bound.addressable_capture_rate == pytest.approx(1.0)
+
+    # Abstaining always captures nothing, and never mis-selects because it never
+    # correctly chose to act - that is None, not 0.0.
+    abstain = mx.compute_for_run(_run(DoNothingPolicy(), dataset, split="all"))
+    assert abstain.addressable_capture_rate == 0.0
+    assert abstain.action_selection_error_rate is None
+
+    for m in (bound, abstain):
+        assert 0.0 <= (m.addressable_capture_rate or 0.0) <= 1.0

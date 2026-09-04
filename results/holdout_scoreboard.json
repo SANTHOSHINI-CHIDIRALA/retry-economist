@@ -98,6 +98,18 @@
             "share": 0.0,
             "rupees": 0.0,
             "rupee_share": 0.0
+          },
+          "futile_hopeless": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0,
+            "rupee_share": 0.0
+          },
+          "wrong_action": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0,
+            "rupee_share": 0.0
           }
         },
         "abstained_buckets": {
@@ -121,6 +133,9 @@
           }
         },
         "restraint_precision": 0.619493,
+        "action_selection_error_rate": null,
+        "total_addressable": 285,
+        "addressable_capture_rate": 0.0,
         "incremental_rupees": 0.0,
         "cannibalised_rupees": 0.0,
         "net_rupees": 0.0,
@@ -201,6 +216,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -224,6 +251,9 @@
               }
             },
             "restraint_precision": 0.614035,
+            "action_selection_error_rate": null,
+            "total_addressable": 22,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -304,6 +334,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -327,6 +369,9 @@
               }
             },
             "restraint_precision": 0.627778,
+            "action_selection_error_rate": null,
+            "total_addressable": 134,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -407,6 +452,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -430,6 +487,9 @@
               }
             },
             "restraint_precision": 0.503876,
+            "action_selection_error_rate": null,
+            "total_addressable": 64,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -510,6 +570,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -533,6 +605,9 @@
               }
             },
             "restraint_precision": 0.553571,
+            "action_selection_error_rate": null,
+            "total_addressable": 25,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -613,6 +688,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -636,6 +723,9 @@
               }
             },
             "restraint_precision": 0.911765,
+            "action_selection_error_rate": null,
+            "total_addressable": 3,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -716,6 +806,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -739,6 +841,9 @@
               }
             },
             "restraint_precision": 0.583333,
+            "action_selection_error_rate": null,
+            "total_addressable": 15,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -819,6 +924,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -842,6 +959,9 @@
               }
             },
             "restraint_precision": 0.756098,
+            "action_selection_error_rate": null,
+            "total_addressable": 10,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -922,6 +1042,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -945,6 +1077,9 @@
               }
             },
             "restraint_precision": 0.666667,
+            "action_selection_error_rate": null,
+            "total_addressable": 12,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -1056,6 +1191,18 @@
             "share": 0.520694,
             "rupees": 2280269.48,
             "rupee_share": 0.643263
+          },
+          "futile_hopeless": {
+            "count": 256,
+            "share": 0.341789,
+            "rupees": 1692583.17,
+            "rupee_share": 0.477477
+          },
+          "wrong_action": {
+            "count": 134,
+            "share": 0.178905,
+            "rupees": 587686.31,
+            "rupee_share": 0.165786
           }
         },
         "abstained_buckets": {
@@ -1079,6 +1226,9 @@
           }
         },
         "restraint_precision": 0.893617,
+        "action_selection_error_rate": 0.478571,
+        "total_addressable": 285,
+        "addressable_capture_rate": 0.512281,
         "incremental_rupees": 390823.17,
         "cannibalised_rupees": 39989.86,
         "net_rupees": 350833.31,
@@ -1159,6 +1309,18 @@
                 "share": 0.947368,
                 "rupees": 106918.7,
                 "rupee_share": 0.832653
+              },
+              "futile_hopeless": {
+                "count": 32,
+                "share": 0.561404,
+                "rupees": 90997.03,
+                "rupee_share": 0.70866
+              },
+              "wrong_action": {
+                "count": 22,
+                "share": 0.385965,
+                "rupees": 15921.67,
+                "rupee_share": 0.123994
               }
             },
             "abstained_buckets": {
@@ -1182,6 +1344,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 1.0,
+            "total_addressable": 22,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -1262,6 +1427,18 @@
                 "share": 0.483333,
                 "rupees": 843645.14,
                 "rupee_share": 0.651767
+              },
+              "futile_hopeless": {
+                "count": 108,
+                "share": 0.3,
+                "rupees": 581753.2,
+                "rupee_share": 0.44944
+              },
+              "wrong_action": {
+                "count": 66,
+                "share": 0.183333,
+                "rupees": 261891.94,
+                "rupee_share": 0.202327
               }
             },
             "abstained_buckets": {
@@ -1285,6 +1462,9 @@
               }
             },
             "restraint_precision": 0.952381,
+            "action_selection_error_rate": 0.496241,
+            "total_addressable": 134,
+            "addressable_capture_rate": 0.5,
             "incremental_rupees": 110429.83,
             "cannibalised_rupees": 38043.6,
             "net_rupees": 72386.23,
@@ -1365,6 +1545,18 @@
                 "share": 0.333333,
                 "rupees": 191780.71,
                 "rupee_share": 0.377199
+              },
+              "futile_hopeless": {
+                "count": 30,
+                "share": 0.232558,
+                "rupees": 105478.87,
+                "rupee_share": 0.207459
+              },
+              "wrong_action": {
+                "count": 13,
+                "share": 0.100775,
+                "rupees": 86301.84,
+                "rupee_share": 0.169741
               }
             },
             "abstained_buckets": {
@@ -1388,6 +1580,9 @@
               }
             },
             "restraint_precision": 0.666667,
+            "action_selection_error_rate": 0.213115,
+            "total_addressable": 64,
+            "addressable_capture_rate": 0.75,
             "incremental_rupees": 126404.91,
             "cannibalised_rupees": 1449.26,
             "net_rupees": 124955.65,
@@ -1468,6 +1663,18 @@
                 "share": 0.25,
                 "rupees": 130265.71,
                 "rupee_share": 0.354739
+              },
+              "futile_hopeless": {
+                "count": 13,
+                "share": 0.232143,
+                "rupees": 129104.53,
+                "rupee_share": 0.351577
+              },
+              "wrong_action": {
+                "count": 1,
+                "share": 0.017857,
+                "rupees": 1161.18,
+                "rupee_share": 0.003162
               }
             },
             "abstained_buckets": {
@@ -1491,6 +1698,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.04,
+            "total_addressable": 25,
+            "addressable_capture_rate": 0.96,
             "incremental_rupees": 127977.13,
             "cannibalised_rupees": 0.0,
             "net_rupees": 127977.13,
@@ -1571,6 +1781,18 @@
                 "share": 0.470588,
                 "rupees": 68282.17,
                 "rupee_share": 0.315802
+              },
+              "futile_hopeless": {
+                "count": 14,
+                "share": 0.411765,
+                "rupees": 66420.62,
+                "rupee_share": 0.307192
+              },
+              "wrong_action": {
+                "count": 2,
+                "share": 0.058824,
+                "rupees": 1861.55,
+                "rupee_share": 0.00861
               }
             },
             "abstained_buckets": {
@@ -1594,6 +1816,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.666667,
+            "total_addressable": 3,
+            "addressable_capture_rate": 0.333333,
             "incremental_rupees": 1351.1,
             "cannibalised_rupees": 0.0,
             "net_rupees": 1351.1,
@@ -1674,6 +1899,18 @@
                 "share": 0.888889,
                 "rupees": 200067.23,
                 "rupee_share": 0.992389
+              },
+              "futile_hopeless": {
+                "count": 17,
+                "share": 0.472222,
+                "rupees": 124886.32,
+                "rupee_share": 0.619471
+              },
+              "wrong_action": {
+                "count": 15,
+                "share": 0.416667,
+                "rupees": 75180.91,
+                "rupee_share": 0.372918
               }
             },
             "abstained_buckets": {
@@ -1697,6 +1934,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 1.0,
+            "total_addressable": 15,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 497.0,
             "net_rupees": -497.0,
@@ -1777,6 +2017,18 @@
                 "share": 0.95122,
                 "rupees": 671610.61,
                 "rupee_share": 0.954395
+              },
+              "futile_hopeless": {
+                "count": 29,
+                "share": 0.707317,
+                "rupees": 555031.46,
+                "rupee_share": 0.78873
+              },
+              "wrong_action": {
+                "count": 10,
+                "share": 0.243902,
+                "rupees": 116579.15,
+                "rupee_share": 0.165665
               }
             },
             "abstained_buckets": {
@@ -1800,6 +2052,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 1.0,
+            "total_addressable": 10,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -1880,6 +2135,18 @@
                 "share": 0.5,
                 "rupees": 67699.21,
                 "rupee_share": 0.542155
+              },
+              "futile_hopeless": {
+                "count": 13,
+                "share": 0.361111,
+                "rupees": 38911.14,
+                "rupee_share": 0.311612
+              },
+              "wrong_action": {
+                "count": 5,
+                "share": 0.138889,
+                "rupees": 28788.07,
+                "rupee_share": 0.230543
               }
             },
             "abstained_buckets": {
@@ -1903,6 +2170,9 @@
               }
             },
             "restraint_precision": 0.666667,
+            "action_selection_error_rate": 0.454545,
+            "total_addressable": 12,
+            "addressable_capture_rate": 0.5,
             "incremental_rupees": 24660.2,
             "cannibalised_rupees": 0.0,
             "net_rupees": 24660.2,
@@ -2014,6 +2284,18 @@
             "share": 0.340454,
             "rupees": 1151423.2,
             "rupee_share": 0.324816
+          },
+          "futile_hopeless": {
+            "count": 196,
+            "share": 0.261682,
+            "rupees": 1047592.13,
+            "rupee_share": 0.295525
+          },
+          "wrong_action": {
+            "count": 59,
+            "share": 0.078772,
+            "rupees": 103831.07,
+            "rupee_share": 0.029291
           }
         },
         "abstained_buckets": {
@@ -2037,6 +2319,9 @@
           }
         },
         "restraint_precision": 0.733813,
+        "action_selection_error_rate": 0.237903,
+        "total_addressable": 285,
+        "addressable_capture_rate": 0.663158,
         "incremental_rupees": 742177.59,
         "cannibalised_rupees": 26390.96,
         "net_rupees": 715786.63,
@@ -2117,6 +2402,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -2140,6 +2437,9 @@
               }
             },
             "restraint_precision": 0.614035,
+            "action_selection_error_rate": null,
+            "total_addressable": 22,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -2220,6 +2520,18 @@
                 "share": 0.411111,
                 "rupees": 643147.47,
                 "rupee_share": 0.496871
+              },
+              "futile_hopeless": {
+                "count": 108,
+                "share": 0.3,
+                "rupees": 581753.2,
+                "rupee_share": 0.44944
+              },
+              "wrong_action": {
+                "count": 40,
+                "share": 0.111111,
+                "rupees": 61394.27,
+                "rupee_share": 0.047431
               }
             },
             "abstained_buckets": {
@@ -2243,6 +2555,9 @@
               }
             },
             "restraint_precision": 0.952381,
+            "action_selection_error_rate": 0.300752,
+            "total_addressable": 134,
+            "addressable_capture_rate": 0.69403,
             "incremental_rupees": 310927.5,
             "cannibalised_rupees": 26390.96,
             "net_rupees": 284536.54,
@@ -2323,6 +2638,18 @@
                 "share": 0.348837,
                 "rupees": 118742.34,
                 "rupee_share": 0.233545
+              },
+              "futile_hopeless": {
+                "count": 30,
+                "share": 0.232558,
+                "rupees": 105478.87,
+                "rupee_share": 0.207459
+              },
+              "wrong_action": {
+                "count": 15,
+                "share": 0.116279,
+                "rupees": 13263.47,
+                "rupee_share": 0.026087
               }
             },
             "abstained_buckets": {
@@ -2346,6 +2673,9 @@
               }
             },
             "restraint_precision": 0.666667,
+            "action_selection_error_rate": 0.245902,
+            "total_addressable": 64,
+            "addressable_capture_rate": 0.71875,
             "incremental_rupees": 199443.28,
             "cannibalised_rupees": 0.0,
             "net_rupees": 199443.28,
@@ -2426,6 +2756,18 @@
                 "share": 0.232143,
                 "rupees": 129104.53,
                 "rupee_share": 0.351577
+              },
+              "futile_hopeless": {
+                "count": 13,
+                "share": 0.232143,
+                "rupees": 129104.53,
+                "rupee_share": 0.351577
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -2449,6 +2791,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 25,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 129138.31,
             "cannibalised_rupees": 0.0,
             "net_rupees": 129138.31,
@@ -2529,6 +2874,18 @@
                 "share": 0.441176,
                 "rupees": 67014.42,
                 "rupee_share": 0.309938
+              },
+              "futile_hopeless": {
+                "count": 14,
+                "share": 0.411765,
+                "rupees": 66420.62,
+                "rupee_share": 0.307192
+              },
+              "wrong_action": {
+                "count": 1,
+                "share": 0.029412,
+                "rupees": 593.8,
+                "rupee_share": 0.002746
               }
             },
             "abstained_buckets": {
@@ -2552,6 +2909,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.333333,
+            "total_addressable": 3,
+            "addressable_capture_rate": 0.666667,
             "incremental_rupees": 2618.85,
             "cannibalised_rupees": 0.0,
             "net_rupees": 2618.85,
@@ -2632,6 +2992,18 @@
                 "share": 0.527778,
                 "rupees": 126813.23,
                 "rupee_share": 0.629029
+              },
+              "futile_hopeless": {
+                "count": 18,
+                "share": 0.5,
+                "rupees": 125923.77,
+                "rupee_share": 0.624617
+              },
+              "wrong_action": {
+                "count": 1,
+                "share": 0.027778,
+                "rupees": 889.46,
+                "rupee_share": 0.004412
               }
             },
             "abstained_buckets": {
@@ -2655,6 +3027,9 @@
               }
             },
             "restraint_precision": null,
+            "action_selection_error_rate": 0.066667,
+            "total_addressable": 15,
+            "addressable_capture_rate": 0.933333,
             "incremental_rupees": 74291.45,
             "cannibalised_rupees": 0.0,
             "net_rupees": 74291.45,
@@ -2735,6 +3110,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -2758,6 +3145,9 @@
               }
             },
             "restraint_precision": 0.756098,
+            "action_selection_error_rate": null,
+            "total_addressable": 10,
+            "addressable_capture_rate": 0.0,
             "incremental_rupees": 0.0,
             "cannibalised_rupees": 0.0,
             "net_rupees": 0.0,
@@ -2838,6 +3228,18 @@
                 "share": 0.416667,
                 "rupees": 66601.21,
                 "rupee_share": 0.533362
+              },
+              "futile_hopeless": {
+                "count": 13,
+                "share": 0.361111,
+                "rupees": 38911.14,
+                "rupee_share": 0.311612
+              },
+              "wrong_action": {
+                "count": 2,
+                "share": 0.055556,
+                "rupees": 27690.07,
+                "rupee_share": 0.22175
               }
             },
             "abstained_buckets": {
@@ -2861,6 +3263,9 @@
               }
             },
             "restraint_precision": 0.666667,
+            "action_selection_error_rate": 0.181818,
+            "total_addressable": 12,
+            "addressable_capture_rate": 0.75,
             "incremental_rupees": 25758.2,
             "cannibalised_rupees": 0.0,
             "net_rupees": 25758.2,
@@ -2899,6 +3304,1099 @@
           "point": 0.043047,
           "low": 0.0306,
           "high": 0.068188,
+          "level": 0.95
+        }
+      }
+    },
+    {
+      "name": "retry_economist (prior)",
+      "is_reference_bound": false,
+      "valid": true,
+      "compliance_violations": [],
+      "metrics": {
+        "n": 749,
+        "n_customers": 240,
+        "decision_quality": {
+          "true_positive": 170,
+          "false_positive": 355,
+          "false_negative": 63,
+          "true_negative": 161,
+          "precision": 0.32381,
+          "recall": 0.729614,
+          "f1": 0.448549
+        },
+        "rupee_decision_quality": {
+          "true_positive": 73239172,
+          "false_positive": 161489330,
+          "false_negative": 19176403,
+          "true_negative": 100579666,
+          "precision": 0.312017,
+          "recall": 0.792498,
+          "f1": 0.447749
+        },
+        "recovery_rate": 0.453939,
+        "organic_rate": 0.233645,
+        "net_uplift_pp": 22.0294,
+        "timing": {
+          "mean_days_to_recovery": 5.977,
+          "median_days_to_recovery": 2.131,
+          "recovered_within_72h_rate": 0.248331,
+          "n": 749,
+          "n_recovered": 340
+        },
+        "rupee_weighted": {
+          "total_rupees_at_risk": 3544845.71,
+          "recovery_rate": 0.405395,
+          "organic_rate": 0.206232,
+          "net_uplift_pp": 19.9163
+        },
+        "n_acted": 525,
+        "n_abstained": 224,
+        "action_rate": 0.700935,
+        "acted_buckets": {
+          "incremental": {
+            "count": 170,
+            "share": 0.226969,
+            "rupees": 732391.72,
+            "rupee_share": 0.206608
+          },
+          "cannibalised": {
+            "count": 5,
+            "share": 0.006676,
+            "rupees": 26390.96,
+            "rupee_share": 0.007445
+          },
+          "wasted": {
+            "count": 138,
+            "share": 0.184246,
+            "rupees": 529976.24,
+            "rupee_share": 0.149506
+          },
+          "futile": {
+            "count": 212,
+            "share": 0.283044,
+            "rupees": 1058526.1,
+            "rupee_share": 0.29861
+          },
+          "futile_hopeless": {
+            "count": 160,
+            "share": 0.213618,
+            "rupees": 984587.1,
+            "rupee_share": 0.277752
+          },
+          "wrong_action": {
+            "count": 52,
+            "share": 0.069426,
+            "rupees": 73939.0,
+            "rupee_share": 0.020858
+          }
+        },
+        "abstained_buckets": {
+          "correct_restraint": {
+            "count": 32,
+            "share": 0.042724,
+            "rupees": 174694.4,
+            "rupee_share": 0.049281
+          },
+          "correct_walkaway": {
+            "count": 129,
+            "share": 0.17223,
+            "rupees": 831102.26,
+            "rupee_share": 0.234454
+          },
+          "missed_opportunity": {
+            "count": 63,
+            "share": 0.084112,
+            "rupees": 191764.03,
+            "rupee_share": 0.054097
+          }
+        },
+        "restraint_precision": 0.71875,
+        "action_selection_error_rate": 0.234234,
+        "total_addressable": 285,
+        "addressable_capture_rate": 0.596491,
+        "incremental_rupees": 732391.72,
+        "cannibalised_rupees": 26390.96,
+        "net_rupees": 706000.76,
+        "total_cost_rupees": 1091.2,
+        "annoyance_units": 16.59,
+        "annoyance_cost_rupees": 15926.4,
+        "net_value_rupees": 688983.16,
+        "cost_per_incremental_rupee": 0.0241,
+        "clv_paise": 1200000,
+        "total_attempts": 515,
+        "attempts_per_txn": 0.6876,
+        "contact_rate": 0.050734,
+        "false_escalation_rate": null,
+        "compliance_violations": 0,
+        "hard_decline_retry_waste": 0,
+        "per_failure_code": {
+          "41": {
+            "n": 57,
+            "n_customers": 37,
+            "decision_quality": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 22,
+              "true_negative": 35,
+              "precision": null,
+              "recall": 0.0,
+              "f1": null
+            },
+            "rupee_decision_quality": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 1592167,
+              "true_negative": 11248558,
+              "precision": null,
+              "recall": 0.0,
+              "f1": null
+            },
+            "recovery_rate": 0.0,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 0.0,
+            "timing": {
+              "mean_days_to_recovery": null,
+              "median_days_to_recovery": null,
+              "recovered_within_72h_rate": 0.0,
+              "n": 57,
+              "n_recovered": 0
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 128407.25,
+              "recovery_rate": 0.0,
+              "organic_rate": 0.0,
+              "net_uplift_pp": 0.0
+            },
+            "n_acted": 0,
+            "n_abstained": 57,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "correct_walkaway": {
+                "count": 35,
+                "share": 0.614035,
+                "rupees": 112485.58,
+                "rupee_share": 0.876006
+              },
+              "missed_opportunity": {
+                "count": 22,
+                "share": 0.385965,
+                "rupees": 15921.67,
+                "rupee_share": 0.123994
+              }
+            },
+            "restraint_precision": 0.614035,
+            "action_selection_error_rate": null,
+            "total_addressable": 22,
+            "addressable_capture_rate": 0.0,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "51": {
+            "n": 360,
+            "n_customers": 187,
+            "decision_quality": {
+              "true_positive": 88,
+              "false_positive": 230,
+              "false_negative": 9,
+              "true_negative": 33,
+              "precision": 0.27673,
+              "recall": 0.907216,
+              "f1": 0.424096
+            },
+            "rupee_decision_quality": {
+              "true_positive": 31043250,
+              "false_positive": 84158972,
+              "false_negative": 1987621,
+              "true_negative": 12249783,
+              "precision": 0.269467,
+              "recall": 0.939825,
+              "f1": 0.418844
+            },
+            "recovery_rate": 0.519444,
+            "organic_rate": 0.288889,
+            "net_uplift_pp": 23.0556,
+            "timing": {
+              "mean_days_to_recovery": 10.225,
+              "median_days_to_recovery": 7.929,
+              "recovered_within_72h_rate": 0.094444,
+              "n": 360,
+              "n_recovered": 187
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 1294396.26,
+              "recovery_rate": 0.423698,
+              "organic_rate": 0.204259,
+              "net_uplift_pp": 21.9439
+            },
+            "n_acted": 318,
+            "n_abstained": 42,
+            "action_rate": 0.883333,
+            "acted_buckets": {
+              "incremental": {
+                "count": 88,
+                "share": 0.244444,
+                "rupees": 310432.5,
+                "rupee_share": 0.239828
+              },
+              "cannibalised": {
+                "count": 5,
+                "share": 0.013889,
+                "rupees": 26390.96,
+                "rupee_share": 0.020389
+              },
+              "wasted": {
+                "count": 87,
+                "share": 0.241667,
+                "rupees": 173974.03,
+                "rupee_share": 0.134406
+              },
+              "futile": {
+                "count": 138,
+                "share": 0.383333,
+                "rupees": 641224.73,
+                "rupee_share": 0.495385
+              },
+              "futile_hopeless": {
+                "count": 101,
+                "share": 0.280556,
+                "rupees": 580950.2,
+                "rupee_share": 0.448819
+              },
+              "wrong_action": {
+                "count": 37,
+                "share": 0.102778,
+                "rupees": 60274.53,
+                "rupee_share": 0.046566
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 12,
+                "share": 0.033333,
+                "rupees": 64026.45,
+                "rupee_share": 0.049464
+              },
+              "correct_walkaway": {
+                "count": 21,
+                "share": 0.058333,
+                "rupees": 58471.38,
+                "rupee_share": 0.045173
+              },
+              "missed_opportunity": {
+                "count": 9,
+                "share": 0.025,
+                "rupees": 19876.21,
+                "rupee_share": 0.015356
+              }
+            },
+            "restraint_precision": 0.785714,
+            "action_selection_error_rate": 0.296,
+            "total_addressable": 134,
+            "addressable_capture_rate": 0.656716,
+            "incremental_rupees": 310432.5,
+            "cannibalised_rupees": 26390.96,
+            "net_rupees": 284041.54,
+            "total_cost_rupees": 636.0,
+            "annoyance_units": 6.36,
+            "annoyance_cost_rupees": 6105.6,
+            "net_value_rupees": 277299.94,
+            "cost_per_incremental_rupee": 0.0237,
+            "clv_paise": 1200000,
+            "total_attempts": 318,
+            "attempts_per_txn": 0.8833,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "91": {
+            "n": 129,
+            "n_customers": 98,
+            "decision_quality": {
+              "true_positive": 46,
+              "false_positive": 71,
+              "false_negative": 4,
+              "true_negative": 8,
+              "precision": 0.393162,
+              "recall": 0.92,
+              "f1": 0.550898
+            },
+            "rupee_decision_quality": {
+              "true_positive": 19944328,
+              "false_positive": 30228634,
+              "false_negative": 132380,
+              "true_negative": 538015,
+              "precision": 0.397511,
+              "recall": 0.993406,
+              "f1": 0.567813
+            },
+            "recovery_rate": 0.581395,
+            "organic_rate": 0.224806,
+            "net_uplift_pp": 35.6589,
+            "timing": {
+              "mean_days_to_recovery": 1.005,
+              "median_days_to_recovery": 1.009,
+              "recovered_within_72h_rate": 0.581395,
+              "n": 129,
+              "n_recovered": 75
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 508433.57,
+              "recovery_rate": 0.75464,
+              "organic_rate": 0.36237,
+              "net_uplift_pp": 39.227
+            },
+            "n_acted": 117,
+            "n_abstained": 12,
+            "action_rate": 0.906977,
+            "acted_buckets": {
+              "incremental": {
+                "count": 46,
+                "share": 0.356589,
+                "rupees": 199443.28,
+                "rupee_share": 0.39227
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 28,
+                "share": 0.217054,
+                "rupees": 184142.0,
+                "rupee_share": 0.362175
+              },
+              "futile": {
+                "count": 43,
+                "share": 0.333333,
+                "rupees": 118144.34,
+                "rupee_share": 0.232369
+              },
+              "futile_hopeless": {
+                "count": 29,
+                "share": 0.224806,
+                "rupees": 104979.87,
+                "rupee_share": 0.206477
+              },
+              "wrong_action": {
+                "count": 14,
+                "share": 0.108527,
+                "rupees": 13164.47,
+                "rupee_share": 0.025892
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 1,
+                "share": 0.007752,
+                "rupees": 99.0,
+                "rupee_share": 0.000195
+              },
+              "correct_walkaway": {
+                "count": 7,
+                "share": 0.054264,
+                "rupees": 5281.15,
+                "rupee_share": 0.010387
+              },
+              "missed_opportunity": {
+                "count": 4,
+                "share": 0.031008,
+                "rupees": 1323.8,
+                "rupee_share": 0.002604
+              }
+            },
+            "restraint_precision": 0.666667,
+            "action_selection_error_rate": 0.233333,
+            "total_addressable": 64,
+            "addressable_capture_rate": 0.71875,
+            "incremental_rupees": 199443.28,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 199443.28,
+            "total_cost_rupees": 234.0,
+            "annoyance_units": 2.34,
+            "annoyance_cost_rupees": 2246.4,
+            "net_value_rupees": 196962.88,
+            "cost_per_incremental_rupee": 0.0124,
+            "clv_paise": 1200000,
+            "total_attempts": 117,
+            "attempts_per_txn": 0.907,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "96": {
+            "n": 56,
+            "n_customers": 50,
+            "decision_quality": {
+              "true_positive": 25,
+              "false_positive": 27,
+              "false_negative": 0,
+              "true_negative": 4,
+              "precision": 0.480769,
+              "recall": 1.0,
+              "f1": 0.649351
+            },
+            "rupee_decision_quality": {
+              "true_positive": 12913831,
+              "false_positive": 23481778,
+              "false_negative": 0,
+              "true_negative": 325913,
+              "precision": 0.354818,
+              "recall": 1.0,
+              "f1": 0.523787
+            },
+            "recovery_rate": 0.714286,
+            "organic_rate": 0.267857,
+            "net_uplift_pp": 44.6429,
+            "timing": {
+              "mean_days_to_recovery": 0.1,
+              "median_days_to_recovery": 0.09,
+              "recovered_within_72h_rate": 0.714286,
+              "n": 56,
+              "n_recovered": 40
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 367215.22,
+              "recovery_rate": 0.639899,
+              "organic_rate": 0.288229,
+              "net_uplift_pp": 35.1669
+            },
+            "n_acted": 52,
+            "n_abstained": 4,
+            "action_rate": 0.928571,
+            "acted_buckets": {
+              "incremental": {
+                "count": 25,
+                "share": 0.446429,
+                "rupees": 129138.31,
+                "rupee_share": 0.351669
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 14,
+                "share": 0.25,
+                "rupees": 105713.25,
+                "rupee_share": 0.287878
+              },
+              "futile": {
+                "count": 13,
+                "share": 0.232143,
+                "rupees": 129104.53,
+                "rupee_share": 0.351577
+              },
+              "futile_hopeless": {
+                "count": 13,
+                "share": 0.232143,
+                "rupees": 129104.53,
+                "rupee_share": 0.351577
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 1,
+                "share": 0.017857,
+                "rupees": 129.0,
+                "rupee_share": 0.000351
+              },
+              "correct_walkaway": {
+                "count": 3,
+                "share": 0.053571,
+                "rupees": 3130.13,
+                "rupee_share": 0.008524
+              },
+              "missed_opportunity": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 25,
+            "addressable_capture_rate": 1.0,
+            "incremental_rupees": 129138.31,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 129138.31,
+            "total_cost_rupees": 104.0,
+            "annoyance_units": 1.56,
+            "annoyance_cost_rupees": 1497.6,
+            "net_value_rupees": 127536.71,
+            "cost_per_incremental_rupee": 0.0124,
+            "clv_paise": 1200000,
+            "total_attempts": 52,
+            "attempts_per_txn": 0.9286,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "ACS_TIMEOUT": {
+            "n": 34,
+            "n_customers": 28,
+            "decision_quality": {
+              "true_positive": 1,
+              "false_positive": 8,
+              "false_negative": 2,
+              "true_negative": 23,
+              "precision": 0.111111,
+              "recall": 0.333333,
+              "f1": 0.166667
+            },
+            "rupee_decision_quality": {
+              "true_positive": 126775,
+              "false_positive": 7550147,
+              "false_negative": 194490,
+              "true_negative": 13750443,
+              "precision": 0.016514,
+              "recall": 0.394612,
+              "f1": 0.031701
+            },
+            "recovery_rate": 0.441176,
+            "organic_rate": 0.411765,
+            "net_uplift_pp": 2.9412,
+            "timing": {
+              "mean_days_to_recovery": 1.057,
+              "median_days_to_recovery": 0.471,
+              "recovered_within_72h_rate": 0.441176,
+              "n": 34,
+              "n_recovered": 15
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 216218.55,
+              "recovery_rate": 0.671286,
+              "organic_rate": 0.665423,
+              "net_uplift_pp": 0.5863
+            },
+            "n_acted": 9,
+            "n_abstained": 25,
+            "action_rate": 0.264706,
+            "acted_buckets": {
+              "incremental": {
+                "count": 1,
+                "share": 0.029412,
+                "rupees": 1267.75,
+                "rupee_share": 0.005863
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 6,
+                "share": 0.176471,
+                "rupees": 39161.14,
+                "rupee_share": 0.181118
+              },
+              "futile": {
+                "count": 2,
+                "share": 0.058824,
+                "rupees": 36340.33,
+                "rupee_share": 0.168072
+              },
+              "futile_hopeless": {
+                "count": 2,
+                "share": 0.058824,
+                "rupees": 36340.33,
+                "rupee_share": 0.168072
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 8,
+                "share": 0.235294,
+                "rupees": 104715.64,
+                "rupee_share": 0.484305
+              },
+              "correct_walkaway": {
+                "count": 15,
+                "share": 0.441176,
+                "rupees": 32788.79,
+                "rupee_share": 0.151647
+              },
+              "missed_opportunity": {
+                "count": 2,
+                "share": 0.058824,
+                "rupees": 1944.9,
+                "rupee_share": 0.008995
+              }
+            },
+            "restraint_precision": 0.92,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 3,
+            "addressable_capture_rate": 0.333333,
+            "incremental_rupees": 1267.75,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 1267.75,
+            "total_cost_rupees": 23.4,
+            "annoyance_units": 1.58,
+            "annoyance_cost_rupees": 1516.8,
+            "net_value_rupees": -272.45,
+            "cost_per_incremental_rupee": 1.2149,
+            "clv_paise": 1200000,
+            "total_attempts": 9,
+            "attempts_per_txn": 0.2647,
+            "contact_rate": 0.264706,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "MANDATE_EXPIRED_M06": {
+            "n": 36,
+            "n_customers": 31,
+            "decision_quality": {
+              "true_positive": 4,
+              "false_positive": 6,
+              "false_negative": 11,
+              "true_negative": 15,
+              "precision": 0.4,
+              "recall": 0.266667,
+              "f1": 0.32
+            },
+            "rupee_decision_quality": {
+              "true_positive": 6783167,
+              "false_positive": 9505703,
+              "false_negative": 734924,
+              "true_negative": 3136374,
+              "precision": 0.41643,
+              "recall": 0.902246,
+              "f1": 0.569847
+            },
+            "recovery_rate": 0.194444,
+            "organic_rate": 0.083333,
+            "net_uplift_pp": 11.1111,
+            "timing": {
+              "mean_days_to_recovery": 2.026,
+              "median_days_to_recovery": 1.997,
+              "recovered_within_72h_rate": 0.166667,
+              "n": 36,
+              "n_recovered": 7
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 201601.68,
+              "recovery_rate": 0.338929,
+              "organic_rate": 0.002465,
+              "net_uplift_pp": 33.6464
+            },
+            "n_acted": 10,
+            "n_abstained": 26,
+            "action_rate": 0.277778,
+            "acted_buckets": {
+              "incremental": {
+                "count": 4,
+                "share": 0.111111,
+                "rupees": 67831.67,
+                "rupee_share": 0.336464
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "futile": {
+                "count": 6,
+                "share": 0.166667,
+                "rupees": 95057.03,
+                "rupee_share": 0.471509
+              },
+              "futile_hopeless": {
+                "count": 6,
+                "share": 0.166667,
+                "rupees": 95057.03,
+                "rupee_share": 0.471509
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 3,
+                "share": 0.083333,
+                "rupees": 497.0,
+                "rupee_share": 0.002465
+              },
+              "correct_walkaway": {
+                "count": 12,
+                "share": 0.333333,
+                "rupees": 30866.74,
+                "rupee_share": 0.153108
+              },
+              "missed_opportunity": {
+                "count": 11,
+                "share": 0.305556,
+                "rupees": 7349.24,
+                "rupee_share": 0.036454
+              }
+            },
+            "restraint_precision": 0.576923,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 15,
+            "addressable_capture_rate": 0.266667,
+            "incremental_rupees": 67831.67,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 67831.67,
+            "total_cost_rupees": 52.0,
+            "annoyance_units": 2.54,
+            "annoyance_cost_rupees": 2438.4,
+            "net_value_rupees": 65341.27,
+            "cost_per_incremental_rupee": 0.0367,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.277778,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "R05": {
+            "n": 41,
+            "n_customers": 34,
+            "decision_quality": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 10,
+              "true_negative": 31,
+              "precision": null,
+              "recall": 0.0,
+              "f1": null
+            },
+            "rupee_decision_quality": {
+              "true_positive": 0,
+              "false_positive": 0,
+              "false_negative": 11657915,
+              "true_negative": 58712349,
+              "precision": null,
+              "recall": 0.0,
+              "f1": null
+            },
+            "recovery_rate": 0.0,
+            "organic_rate": 0.0,
+            "net_uplift_pp": 0.0,
+            "timing": {
+              "mean_days_to_recovery": null,
+              "median_days_to_recovery": null,
+              "recovered_within_72h_rate": 0.0,
+              "n": 41,
+              "n_recovered": 0
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 703702.64,
+              "recovery_rate": 0.0,
+              "organic_rate": 0.0,
+              "net_uplift_pp": 0.0
+            },
+            "n_acted": 0,
+            "n_abstained": 41,
+            "action_rate": 0.0,
+            "acted_buckets": {
+              "incremental": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "futile": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "correct_walkaway": {
+                "count": 31,
+                "share": 0.756098,
+                "rupees": 587123.49,
+                "rupee_share": 0.834335
+              },
+              "missed_opportunity": {
+                "count": 10,
+                "share": 0.243902,
+                "rupees": 116579.15,
+                "rupee_share": 0.165665
+              }
+            },
+            "restraint_precision": 0.756098,
+            "action_selection_error_rate": null,
+            "total_addressable": 10,
+            "addressable_capture_rate": 0.0,
+            "incremental_rupees": 0.0,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 0.0,
+            "total_cost_rupees": 0.0,
+            "annoyance_units": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null,
+            "clv_paise": 1200000,
+            "total_attempts": 0,
+            "attempts_per_txn": 0.0,
+            "contact_rate": 0.0,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          },
+          "U69": {
+            "n": 36,
+            "n_customers": 28,
+            "decision_quality": {
+              "true_positive": 6,
+              "false_positive": 13,
+              "false_negative": 5,
+              "true_negative": 12,
+              "precision": 0.315789,
+              "recall": 0.545455,
+              "f1": 0.4
+            },
+            "rupee_decision_quality": {
+              "true_positive": 2427821,
+              "false_positive": 6564096,
+              "false_negative": 2876906,
+              "true_negative": 618231,
+              "precision": 0.27,
+              "recall": 0.457671,
+              "f1": 0.339635
+            },
+            "recovery_rate": 0.444444,
+            "organic_rate": 0.277778,
+            "net_uplift_pp": 16.6667,
+            "timing": {
+              "mean_days_to_recovery": 0.658,
+              "median_days_to_recovery": 0.13,
+              "recovered_within_72h_rate": 0.444444,
+              "n": 36,
+              "n_recovered": 16
+            },
+            "rupee_weighted": {
+              "total_rupees_at_risk": 124870.54,
+              "recovery_rate": 0.452399,
+              "organic_rate": 0.257972,
+              "net_uplift_pp": 19.4427
+            },
+            "n_acted": 19,
+            "n_abstained": 17,
+            "action_rate": 0.527778,
+            "acted_buckets": {
+              "incremental": {
+                "count": 6,
+                "share": 0.166667,
+                "rupees": 24278.21,
+                "rupee_share": 0.194427
+              },
+              "cannibalised": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wasted": {
+                "count": 3,
+                "share": 0.083333,
+                "rupees": 26985.82,
+                "rupee_share": 0.21611
+              },
+              "futile": {
+                "count": 10,
+                "share": 0.277778,
+                "rupees": 38655.14,
+                "rupee_share": 0.309562
+              },
+              "futile_hopeless": {
+                "count": 9,
+                "share": 0.25,
+                "rupees": 38155.14,
+                "rupee_share": 0.305558
+              },
+              "wrong_action": {
+                "count": 1,
+                "share": 0.027778,
+                "rupees": 500.0,
+                "rupee_share": 0.004004
+              }
+            },
+            "abstained_buckets": {
+              "correct_restraint": {
+                "count": 7,
+                "share": 0.194444,
+                "rupees": 5227.31,
+                "rupee_share": 0.041862
+              },
+              "correct_walkaway": {
+                "count": 5,
+                "share": 0.138889,
+                "rupees": 955.0,
+                "rupee_share": 0.007648
+              },
+              "missed_opportunity": {
+                "count": 5,
+                "share": 0.138889,
+                "rupees": 28769.06,
+                "rupee_share": 0.230391
+              }
+            },
+            "restraint_precision": 0.705882,
+            "action_selection_error_rate": 0.142857,
+            "total_addressable": 12,
+            "addressable_capture_rate": 0.5,
+            "incremental_rupees": 24278.21,
+            "cannibalised_rupees": 0.0,
+            "net_rupees": 24278.21,
+            "total_cost_rupees": 41.8,
+            "annoyance_units": 2.21,
+            "annoyance_cost_rupees": 2121.6,
+            "net_value_rupees": 22114.81,
+            "cost_per_incremental_rupee": 0.0891,
+            "clv_paise": 1200000,
+            "total_attempts": 19,
+            "attempts_per_txn": 0.5278,
+            "contact_rate": 0.527778,
+            "false_escalation_rate": null,
+            "compliance_violations": 0,
+            "hard_decline_retry_waste": 0
+          }
+        }
+      },
+      "confidence_intervals": {
+        "iterations": 2000,
+        "seed": 20260601,
+        "n_customers": 240,
+        "recovery_rate": {
+          "point": 0.453939,
+          "low": 0.416107,
+          "high": 0.49101,
+          "level": 0.95
+        },
+        "net_uplift_pp": {
+          "point": 22.029372,
+          "low": 19.215156,
+          "high": 25.132275,
+          "level": 0.95
+        },
+        "cost_per_incremental_rupee": {
+          "point": 0.024104,
+          "low": 0.016996,
+          "high": 0.037966,
           "level": 0.95
         }
       }
@@ -2972,6 +4470,18 @@
             "share": 0.0,
             "rupees": 0.0,
             "rupee_share": 0.0
+          },
+          "futile_hopeless": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0,
+            "rupee_share": 0.0
+          },
+          "wrong_action": {
+            "count": 0,
+            "share": 0.0,
+            "rupees": 0.0,
+            "rupee_share": 0.0
           }
         },
         "abstained_buckets": {
@@ -2995,6 +4505,9 @@
           }
         },
         "restraint_precision": 1.0,
+        "action_selection_error_rate": 0.0,
+        "total_addressable": 285,
+        "addressable_capture_rate": 1.0,
         "incremental_rupees": 998094.75,
         "cannibalised_rupees": 0.0,
         "net_rupees": 998094.75,
@@ -3075,6 +4588,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3098,6 +4623,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 22,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 15921.67,
             "cannibalised_rupees": 0.0,
             "net_rupees": 15921.67,
@@ -3178,6 +4706,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3201,6 +4741,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 134,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 390583.24,
             "cannibalised_rupees": 0.0,
             "net_rupees": 390583.24,
@@ -3281,6 +4824,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3304,6 +4859,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 64,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 213931.55,
             "cannibalised_rupees": 0.0,
             "net_rupees": 213931.55,
@@ -3384,6 +4942,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3407,6 +4977,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 25,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 129138.31,
             "cannibalised_rupees": 0.0,
             "net_rupees": 129138.31,
@@ -3487,6 +5060,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3510,6 +5095,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 3,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 3212.65,
             "cannibalised_rupees": 0.0,
             "net_rupees": 3212.65,
@@ -3590,6 +5178,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3613,6 +5213,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 15,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 75180.91,
             "cannibalised_rupees": 0.0,
             "net_rupees": 75180.91,
@@ -3693,6 +5296,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3716,6 +5331,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 10,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 116579.15,
             "cannibalised_rupees": 0.0,
             "net_rupees": 116579.15,
@@ -3796,6 +5414,18 @@
                 "share": 0.0,
                 "rupees": 0.0,
                 "rupee_share": 0.0
+              },
+              "futile_hopeless": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
+              },
+              "wrong_action": {
+                "count": 0,
+                "share": 0.0,
+                "rupees": 0.0,
+                "rupee_share": 0.0
               }
             },
             "abstained_buckets": {
@@ -3819,6 +5449,9 @@
               }
             },
             "restraint_precision": 1.0,
+            "action_selection_error_rate": 0.0,
+            "total_addressable": 12,
+            "addressable_capture_rate": 1.0,
             "incremental_rupees": 53547.27,
             "cannibalised_rupees": 0.0,
             "net_rupees": 53547.27,
@@ -3862,6 +5495,10 @@
       }
     }
   ],
+  "provider": null,
+  "router_stats": {},
+  "provider_stats": {},
+  "calibration": {},
   "paired_comparisons": [
     {
       "subject": "rules_only",
@@ -3894,6 +5531,42 @@
         "point": 0.452153,
         "low": 0.413873,
         "high": 0.492027,
+        "level": 0.95
+      },
+      "uplift_significant": true,
+      "f1_significant": true
+    },
+    {
+      "subject": "retry_economist (prior)",
+      "baseline": "rules_only",
+      "net_uplift_pp_delta": {
+        "point": -2.536716,
+        "low": -3.631647,
+        "high": -1.523546,
+        "level": 0.95
+      },
+      "decision_f1_delta": {
+        "point": -0.003604,
+        "low": -0.022225,
+        "high": 0.014519,
+        "level": 0.95
+      },
+      "uplift_significant": true,
+      "f1_significant": false
+    },
+    {
+      "subject": "retry_economist (prior)",
+      "baseline": "naive_retry_3x",
+      "net_uplift_pp_delta": {
+        "point": 6.408545,
+        "low": 3.250975,
+        "high": 9.795918,
+        "level": 0.95
+      },
+      "decision_f1_delta": {
+        "point": 0.106228,
+        "low": 0.061953,
+        "high": 0.153679,
         "level": 0.95
       },
       "uplift_significant": true,
@@ -3991,6 +5664,35 @@
         "robust": true
       },
       {
+        "policy": "retry_economist (prior)",
+        "is_reference_bound": false,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 706000.76,
+            "annoyance_cost_rupees": 5308.8,
+            "net_value_rupees": 699600.76,
+            "cost_per_incremental_rupee": 0.0091
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 706000.76,
+            "annoyance_cost_rupees": 15926.4,
+            "net_value_rupees": 688983.16,
+            "cost_per_incremental_rupee": 0.0241
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 706000.76,
+            "annoyance_cost_rupees": 39816.0,
+            "net_value_rupees": 665093.56,
+            "cost_per_incremental_rupee": 0.0579
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      },
+      {
         "policy": "oracle_best (CHEATS)",
         "is_reference_bound": true,
         "points": [
@@ -4020,6 +5722,44 @@
         "robust": true
       }
     ],
-    "conclusion": "The ranking survives the sweep: `rules_only` has the highest net value at every lifetime value tested, so the conclusion is about the policy, not the guess."
-  }
+    "conclusion": "The ranking FLIPS within the sweep (best policy varies: `retry_economist (prior)`, `rules_only`). The conclusion is an artefact of the lifetime-value assumption and must not be stated without it."
+  },
+  "discount_rate_sweep": [
+    {
+      "policy": "retry_economist (prior)",
+      "points": [
+        {
+          "daily_discount_rate": 0.005,
+          "recovery_rate": 0.4579,
+          "net_uplift_pp": 22.43,
+          "net_value_rupees": 688720.96,
+          "action_rate": 0.7196
+        },
+        {
+          "daily_discount_rate": 0.02,
+          "recovery_rate": 0.4539,
+          "net_uplift_pp": 22.029,
+          "net_value_rupees": 688983.16,
+          "action_rate": 0.7009
+        },
+        {
+          "daily_discount_rate": 0.05,
+          "recovery_rate": 0.4473,
+          "net_uplift_pp": 21.362,
+          "net_value_rupees": 688794.16,
+          "action_rate": 0.6609
+        }
+      ],
+      "advantage_over": {
+        "rules_only": {
+          "baseline_net_uplift_pp": 24.566,
+          "advantage_survives_all_rates": false
+        },
+        "naive_retry_3x": {
+          "baseline_net_uplift_pp": 15.621,
+          "advantage_survives_all_rates": true
+        }
+      }
+    }
+  ]
 }

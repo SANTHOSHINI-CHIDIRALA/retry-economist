@@ -1,0 +1,70 @@
+==============================================================================
+C1 (RISK_DECLINED) VETO DEMO
+==============================================================================
+
+THIS TRANSACTION IS CONSTRUCTED, NOT FROM THE REAL HOLDOUT.
+On the real 749-txn holdout, rules_only never proposes a non-empty plan for a risk-declined transaction (its own rule table already abstains on fraud/risk-flagged declines), so C1 never gets a live plan to veto under the retry_economist (prior) pairing - see results/veto_precision.md, where C1_RISK_DECLINED does not appear in the by-rule breakdown at all. This transaction isolates the guarantee directly instead.
+
+-- 1. THE TRANSACTION -------------------------------------------------------
+txn_id:            demo_risk_declined_001
+amount:            INR 25,000.00
+failure_code:      'RISK_SCORE_HIGH'  (deliberately not a code rules_only's own
+                   table hard-codes to ABSTAIN)
+decline_type:      'soft'  (soft, not hard - isolates C1 from C2)
+gateway_message:   'Elevated fraud risk score; transaction flagged by the risk engine for manual review'
+past_success_rate: 0.97  (a clean history - would look attractive to retry)
+
+-- 2. THE DETERMINISTIC ROOT-CAUSE SIGNAL -----------------------------------
+root_cause_signal(txn).value      = 'risk_declined'
+root_cause_signal(txn).confidence = 0.55
+root_cause_signal(txn).summary    = 'code RISK_SCORE_HIGH is unrecognised; gateway text reads as risk_declined'
+Is this RISK ('risk_declined')?             True
+
+C1 reads THIS signal, not a model's self-reported root_cause - see compliance.py::_c1_risk_declined. It cannot be talked past by a confident-sounding proposal.
+
+-- 3. THE PROPOSED PLAN ------------------------------------------------------
+proposed_plan = ('retry_now',)
+
+-- 4. WHAT THE EV WOULD BE IF COMPLIANCE WERE IGNORED ----------------------
+  plan                         = ['retry_now']
+  amount_paise                 = 2500000
+  value_capture_rate           = 1.0
+  p_recover_if_act             = 0.85
+  p_recover_if_abstain         = 0.1
+  delta_p                      = 0.75
+  expected_days_to_recovery    = 0.02
+  daily_discount_rate          = 0.02
+  discount_factor              = 0.999604
+  gross_value_paise            = 1874257.55
+  action_cost_paise            = 200
+  annoyance_units              = 0.03
+  annoyance_cost_paise         = 2880.0
+  net_expected_value_paise     = 1871177.55
+  estimator                    = historical_prior_train_only
+
+>>> net_expected_value_paise = 1,871,177.55 paise (INR 18,711.78)
+>>> EV alone says: POSITIVE - a plan-only, no-compliance actor would ACT.
+
+-- 5. WHAT apply_compliance() ACTUALLY DOES ---------------------------------
+original_plan = ('retry_now',)
+allowed_plan  = ()
+checks:
+  C1_RISK_DECLINED         fired=True  removed=('retry_now',)  reason='risk-engine decline: every action is vetoed regardless of expected value'
+  C2_HARD_DECLINE_NO_DEBIT fired=False removed=()  reason='not a hard decline'
+  C3_ATTEMPT_CAP           fired=False removed=()  reason='plan fits the 3 remaining attempt(s)'
+  C4_EXPIRED_MANDATE       fired=False removed=()  reason='mandate is not expired'
+  C5_CONTACT_CAP           fired=False removed=()  reason='0 contact(s) in the last 7 days, under the cap of 3'
+
+-- 6. THE ECONOMIST'S ACTUAL DECISION ---------------------------------------
+verdict        = 'veto'
+plan           = ()
+proposed_plan  = ('retry_now',)
+reason         = 'C1_RISK_DECLINED: every proposed action was vetoed before any expected-value arithmetic ran'
+ev             = None
+
+==============================================================================
+CONCLUSION
+==============================================================================
+The hypothetical EV of acting was POSITIVE (INR 18,711.78), computed against an estimator deliberately primed to be optimistic (85% success rate assumed).
+The economist's actual verdict was 'veto' with plan () - every proposed action was removed by C1 before the EV arithmetic that produced that positive number was ever allowed to decide anything.
+No expected value, however large, overrode the risk-decline veto. This is the property tests/test_economist.py::test_c1_vetoes_a_risk_decline_at_any_expected_value already asserts with an amount two orders of magnitude larger; this trace shows the same guarantee at a realistic transaction size, in full.

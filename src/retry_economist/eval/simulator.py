@@ -121,8 +121,44 @@ class TxnOutcome:
 
     @property
     def futile(self) -> bool:
-        """Never going to recover. Everything spent here was spent for nothing."""
+        """Acted, failed, and the customer was never going to pay unaided.
+
+        Retained as the parent of the two buckets below, so every existing
+        consumer of `futile` keeps its meaning. The split matters because the
+        two halves blame different components: see `wrong_action`.
+        """
         return self.acted and not self.recovered and not self.would_pay_anyway
+
+    @property
+    def futile_hopeless(self) -> bool:
+        """Acted on something no affordable action could ever have recovered.
+
+        The decision to act was wrong. Nothing in the action space would have
+        worked, so this is spend that should never have been authorised - a
+        failure of the economics, not of action selection.
+        """
+        return self.futile and not self.recoverable_within_caps
+
+    @property
+    def wrong_action(self) -> bool:
+        """Acted on something recoverable, and picked the wrong action.
+
+        The decision to act was RIGHT - an affordable action existed that would
+        have recovered this - and the choice of action lost it. Separating this
+        from `futile_hopeless` is what makes the two failure modes attributable:
+        one says "should not have spent", the other says "should have spent
+        differently", and only the second is a routing problem.
+        """
+        return self.futile and self.recoverable_within_caps
+
+    @property
+    def addressable(self) -> bool:
+        """Would not have paid unaided, and some affordable action would work.
+
+        A property of the transaction, not of any policy, so it gives every
+        policy the same denominator to be judged against.
+        """
+        return not self.would_pay_anyway and self.recoverable_within_caps
 
     # --- buckets for transactions we ABSTAINED on --------------------------
     #

@@ -17,13 +17,23 @@ intended, at zero cost.
       cannibalised         lost it, would have paid         <- revenue destroyed
       wasted               recovered, would have paid       <- paid for nothing
       futile               lost it, would not have paid     <- paid for nothing
+        futile_hopeless      ... and nothing would have worked
+        wrong_action         ... but something WOULD have worked
 
     ABSTAINED
       correct_restraint    left alone, and they paid        <- right call, free
       correct_walkaway     left alone, nothing would work   <- right call, free
       missed_opportunity   left alone, something would work <- the real miss
 
-Seven buckets, mutually exclusive and exhaustive, summing to n by construction.
+`futile` is reported as a parent and as two children, because the two halves
+blame different components. Acting on an invoice no affordable action could have
+recovered is a failure of the economics - that spend should never have been
+authorised. Acting on a recoverable invoice and choosing the wrong action is a
+failure of routing. Lumped together they are unattributable, and a router cannot
+be held to a number that also contains someone else's mistakes.
+
+Seven buckets, mutually exclusive and exhaustive, summing to n by construction
+(eight if `futile` is expanded into its two children).
 `restraint_precision` - the share of untouched transactions that no available
 action could have improved - is the project's central claim, so it is computed
 here as a first-class metric rather than assembled by hand in a report.
@@ -206,7 +216,14 @@ class Metrics:
     incremental: Bucket
     cannibalised: Bucket
     wasted: Bucket
+    #: Parent of the two below; retained so `futile` keeps its original meaning.
     futile: Bucket
+    futile_hopeless: Bucket
+    wrong_action: Bucket
+    #: Of the transactions where acting WAS the right call, the share where the
+    #: wrong action was chosen. The router's own error rate, isolated from the
+    #: economics. None when the policy never correctly chose to act.
+    action_selection_error_rate: float | None
 
     # --- outcomes where it abstained --------------------------------------
     correct_restraint: Bucket
@@ -215,6 +232,14 @@ class Metrics:
     #: Of the transactions left untouched, the share no available action could
     #: have improved. None when the policy never abstained.
     restraint_precision: float | None
+
+    #: Transactions that would not have paid unaided AND that some affordable
+    #: action would have recovered. A property of the DATA, so every policy is
+    #: judged against the same denominator.
+    total_addressable: int
+    #: Share of that addressable pool this policy actually captured - the
+    #: cleanest answer to "how much of what was winnable did you win".
+    addressable_capture_rate: float | None
 
     # --- money -------------------------------------------------------------
     incremental_rupees: float
@@ -285,6 +310,8 @@ class Metrics:
                 "cannibalised": self.cannibalised.to_dict(),
                 "wasted": self.wasted.to_dict(),
                 "futile": self.futile.to_dict(),
+                "futile_hopeless": self.futile_hopeless.to_dict(),
+                "wrong_action": self.wrong_action.to_dict(),
             },
             "abstained_buckets": {
                 "correct_restraint": self.correct_restraint.to_dict(),
@@ -293,6 +320,17 @@ class Metrics:
             },
             "restraint_precision": (
                 None if self.restraint_precision is None else round(self.restraint_precision, 6)
+            ),
+            "action_selection_error_rate": (
+                None
+                if self.action_selection_error_rate is None
+                else round(self.action_selection_error_rate, 6)
+            ),
+            "total_addressable": self.total_addressable,
+            "addressable_capture_rate": (
+                None
+                if self.addressable_capture_rate is None
+                else round(self.addressable_capture_rate, 6)
             ),
             "incremental_rupees": round(self.incremental_rupees, 2),
             "cannibalised_rupees": round(self.cannibalised_rupees, 2),
@@ -359,10 +397,15 @@ def _empty(clv_paise: int, violations: int) -> Metrics:
         cannibalised=zero,
         wasted=zero,
         futile=zero,
+        futile_hopeless=zero,
+        wrong_action=zero,
+        action_selection_error_rate=None,
         correct_restraint=zero,
         correct_walkaway=zero,
         missed_opportunity=zero,
         restraint_precision=None,
+        total_addressable=0,
+        addressable_capture_rate=None,
         incremental_rupees=0.0,
         cannibalised_rupees=0.0,
         net_rupees=0.0,
@@ -406,6 +449,8 @@ def compute(
     cannibalised = _bucket([o for o in outcomes if o.cannibalised], n, total_paise)
     wasted = _bucket([o for o in outcomes if o.wasted], n, total_paise)
     futile = _bucket([o for o in outcomes if o.futile], n, total_paise)
+    futile_hopeless = _bucket([o for o in outcomes if o.futile_hopeless], n, total_paise)
+    wrong_action = _bucket([o for o in outcomes if o.wrong_action], n, total_paise)
     restraint = _bucket([o for o in outcomes if o.correct_restraint], n, total_paise)
     walkaway = _bucket([o for o in outcomes if o.correct_walkaway], n, total_paise)
     missed = _bucket([o for o in outcomes if o.missed_opportunity], n, total_paise)
@@ -432,6 +477,21 @@ def compute(
     )
     rupee_recovery_rate = recovered_paise / total_paise if total_paise else 0.0
     rupee_organic_rate = organic_paise / total_paise if total_paise else 0.0
+
+    # Of the transactions the policy was RIGHT to act on, how often did it pick
+    # the wrong action? Incremental means it chose well; wrong_action means the
+    # opportunity was real and the choice lost it.
+    correct_act_attempts = incremental.count + wrong_action.count
+    action_selection_error_rate = (
+        wrong_action.count / correct_act_attempts if correct_act_attempts else None
+    )
+
+    # Denominator fixed by the data, not by the policy, so capture rates compare
+    # across policies rather than each grading its own homework.
+    total_addressable = sum(1 for o in outcomes if o.addressable)
+    addressable_capture_rate = (
+        incremental.count / total_addressable if total_addressable else None
+    )
 
     # The act/abstain decision as a confusion matrix, counted and weighted.
     decision = decision_quality(
@@ -503,12 +563,17 @@ def compute(
         cannibalised=cannibalised,
         wasted=wasted,
         futile=futile,
+        futile_hopeless=futile_hopeless,
+        wrong_action=wrong_action,
+        action_selection_error_rate=action_selection_error_rate,
         correct_restraint=restraint,
         correct_walkaway=walkaway,
         missed_opportunity=missed,
         restraint_precision=(
             (restraint.count + walkaway.count) / len(abstained) if abstained else None
         ),
+        total_addressable=total_addressable,
+        addressable_capture_rate=addressable_capture_rate,
         incremental_rupees=incremental.rupees,
         cannibalised_rupees=cannibalised.rupees,
         net_rupees=net_rupees,
