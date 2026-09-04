@@ -39,7 +39,7 @@ from retry_economist.economist.timing import (  # noqa: E402
     expected_days_for_action,
 )
 from retry_economist.policies.base import ObservedTransaction  # noqa: E402
-from retry_economist.router.signals import Signal, Signals  # noqa: E402
+from retry_economist.router.signals import Signal, Signals, SignalIndex  # noqa: E402
 from retry_economist.schema import IST  # noqa: E402
 
 BASE = datetime(2026, 6, 10, 12, 0, tzinfo=IST)
@@ -492,3 +492,76 @@ def test_cost_tables_do_not_drift_from_the_eval_package() -> None:
 def test_new_mandate_cost_composition_is_unchanged() -> None:
     cost = economist_action_cost("request_new_mandate")
     assert cost.paise == NEW_MANDATE_REQUEST_PAISE + SMS_COST_PAISE
+
+
+# ---------------------------------------------------------------------------
+# two plan sources, one economist
+# ---------------------------------------------------------------------------
+
+
+def _fitted_estimator() -> HistoricalPriorEstimator:
+    return HistoricalPriorEstimator(
+        abstain_by_code={}, act_by_code_action={}, act_by_code={}, global_abstain=0.2, global_act=0.4
+    )
+
+
+def test_naive_plan_policy_prices_naive_retry_3xs_ladder_not_a_single_action() -> None:
+    """`retry_economist (naive plan)` must price the THREE-action ladder
+    `naive_retry_3x` proposes, not `rules_only`'s single action - the whole
+    point of this policy is to isolate the economist against a plan source
+    that does not discriminate by failure code."""
+    from retry_economist.policies.retry_economist_naive_plan import RetryEconomistNaivePlanPolicy
+
+    txn = make_txn(failure_code="96", decline_type="soft", retry_attempts_used=0, retry_cap=3)
+    policy = RetryEconomistNaivePlanPolicy(SignalIndex([txn]), _fitted_estimator())
+
+    policy.decide(txn)
+    decision = policy.decisions[txn.txn_id]
+
+    assert decision.proposed_plan == ("retry_now", "retry_in_2h", "retry_in_24h")
+
+
+def test_prior_and_naive_plan_policies_share_the_economist_base() -> None:
+    """Both concrete policies are `EconomistOverPlan` subclasses with distinct
+    names and plan sources - the refactor that extracted the shared base must
+    not have collapsed the two into one."""
+    from retry_economist.policies.retry_economist_naive_plan import RetryEconomistNaivePlanPolicy
+    from retry_economist.policies.retry_economist_prior import EconomistOverPlan, RetryEconomistPriorPolicy
+
+    assert issubclass(RetryEconomistPriorPolicy, EconomistOverPlan)
+    assert issubclass(RetryEconomistNaivePlanPolicy, EconomistOverPlan)
+    assert RetryEconomistPriorPolicy.name != RetryEconomistNaivePlanPolicy.name
+
+    txn = make_txn(failure_code="41", decline_type="hard")
+    estimator = _fitted_estimator()
+    prior_policy = RetryEconomistPriorPolicy(SignalIndex([txn]), estimator)
+    naive_policy = RetryEconomistNaivePlanPolicy(SignalIndex([txn]), estimator)
+
+    prior_policy.decide(txn)
+    naive_policy.decide(txn)
+
+    # rules_only abstains outright on a hard decline with an unrecognised
+    # code; naive_retry_3x proposes its ladder regardless.
+    assert prior_policy.decisions[txn.txn_id].proposed_plan == ()
+    assert naive_policy.decisions[txn.txn_id].proposed_plan == (
+        "retry_now",
+        "retry_in_2h",
+        "retry_in_24h",
+    )
+
+
+def test_naive_plan_policy_veto_never_reroutes_to_a_different_action() -> None:
+    """Same no-rerouting guarantee as the economist itself, exercised through
+    the naive-plan policy end to end: a hard decline strips only the debit
+    actions, and nothing outside the proposed ladder ever appears."""
+    from retry_economist.policies.retry_economist_naive_plan import RetryEconomistNaivePlanPolicy
+
+    txn = make_txn(failure_code="41", decline_type="hard", amount_paise=ABSURD_AMOUNT_PAISE)
+    policy = RetryEconomistNaivePlanPolicy(SignalIndex([txn]), _fitted_estimator())
+
+    decision = policy.decide(txn)
+
+    assert set(decision.plan).issubset({"retry_now", "retry_in_2h", "retry_in_24h"})
+    assert "retry_now" not in decision.plan
+    assert "retry_in_2h" not in decision.plan
+    assert "retry_in_24h" not in decision.plan

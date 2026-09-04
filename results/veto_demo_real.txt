@@ -1,0 +1,71 @@
+==============================================================================
+C1 (RISK_DECLINED) VETO DEMO - REAL HOLDOUT TRANSACTION
+==============================================================================
+
+Selected from 39 real holdout transactions where C1 fired under retry_economist (naive plan) (naive_retry_3x proposes its fixed ladder regardless of failure code, so risk declines are not filtered out before reaching the economist, unlike the rules_only-sourced pairing - see results/veto_demo.txt). 0 of 39 had a positive hypothetical EV; this is the largest-amount transaction, chosen for legibility, not cherry-picked for a bigger number.
+
+-- 1. THE TRANSACTION (real holdout row) ------------------------------------
+txn_id:            pay_00647
+customer_id:       cust_0027
+amount:            INR 60,000.00
+failure_code:      'R05'
+decline_type:      'hard'
+gateway_message:   'R05 -- SUSPECTED FRAUD, BLOCKED'
+attempts_left:     2
+past_success_rate: 0.7976
+
+-- 2. THE DETERMINISTIC ROOT-CAUSE SIGNAL -----------------------------------
+root_cause_signal(txn).value      = 'risk_declined'
+root_cause_signal(txn).confidence = 0.95
+root_cause_signal(txn).summary    = 'code R05 and the gateway text both read as risk_declined'
+Is this RISK ('risk_declined')?             True
+
+-- 3. THE PROPOSED PLAN (naive_retry_3x, unchanged by failure code) --------
+proposed_plan = ('retry_now', 'retry_in_2h')
+(naive_retry_3x proposes this ladder on every transaction with attempts_left > 0, with NO reference to what failed - see policies/naive_retry.py)
+
+-- 4. WHAT THE EV WOULD BE IF COMPLIANCE WERE IGNORED ----------------------
+(computed by calling compute_ev() directly on the ORIGINAL plan, bypassing apply_compliance - Economist.decide() itself never reaches this arithmetic once compliance empties the plan)
+
+  plan                         = ['retry_now', 'retry_in_2h']
+  amount_paise                 = 6000000
+  value_capture_rate           = 1.0
+  p_recover_if_act             = 0.0
+  p_recover_if_abstain         = 0.0
+  delta_p                      = 0.0
+  expected_days_to_recovery    = 0.1
+  daily_discount_rate          = 0.02
+  discount_factor              = 0.998022
+  gross_value_paise            = 0.0
+  action_cost_paise            = 400
+  annoyance_units              = 0.06
+  annoyance_cost_paise         = 5760.0
+  net_expected_value_paise     = -6160.0
+  estimator                    = historical_prior_train_only
+
+>>> net_expected_value_paise = -6,160.00 paise (INR -61.60)
+>>> EV alone (against the REAL train-fitted historical prior) says: non-positive.
+
+-- 5. WHAT apply_compliance() ACTUALLY DOES ---------------------------------
+original_plan = ('retry_now', 'retry_in_2h')
+allowed_plan  = ()
+checks:
+  C1_RISK_DECLINED         fired=True  removed=('retry_now', 'retry_in_2h')  reason='risk-engine decline: every action is vetoed regardless of expected value'
+  C2_HARD_DECLINE_NO_DEBIT fired=False removed=()  reason='hard decline, but the plan proposes no debit attempt'
+  C3_ATTEMPT_CAP           fired=False removed=()  reason='plan fits the 2 remaining attempt(s)'
+  C4_EXPIRED_MANDATE       fired=False removed=()  reason='mandate is not expired'
+  C5_CONTACT_CAP           fired=False removed=()  reason='4 contact(s) in the last 7 days, but the plan contacts nobody'
+
+-- 6. THE ECONOMIST'S ACTUAL DECISION (from the real run) ------------------
+verdict        = 'veto'
+plan           = ()
+proposed_plan  = ('retry_now', 'retry_in_2h')
+reason         = 'C1_RISK_DECLINED: every proposed action was vetoed before any expected-value arithmetic ran'
+ev             = None
+
+==============================================================================
+CONCLUSION
+==============================================================================
+On a REAL holdout transaction, the hypothetical EV of following through on naive_retry_3x's proposed ladder was non-positive (INR -61.60), priced with the actual train-fitted historical prior used everywhere else in this run - no optimistic estimator, no synthetic numbers.
+The economist's actual verdict was 'veto' with plan () - C1_RISK_DECLINED removed the entire proposed plan before any EV arithmetic ran, exactly as it does in the constructed demo (results/veto_demo.txt) and as the property test (tests/test_economist.py::test_c1_vetoes_a_risk_decline_at_any_expected_value) asserts.
+39 real holdout transactions hit C1 this way under retry_economist (naive plan); 0 of them had a positive hypothetical EV. This file documents one in full; results/veto_demo.txt documents the same guarantee on a constructed transaction and remains as a fallback reference.

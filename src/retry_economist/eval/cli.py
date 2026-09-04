@@ -52,6 +52,7 @@ from retry_economist.policies.do_nothing import DoNothingPolicy
 from retry_economist.policies.llm_router_only import LLMRouterOnlyPolicy
 from retry_economist.policies.naive_retry import NaiveRetry3xPolicy
 from retry_economist.policies.oracle_best import OracleBestPolicy
+from retry_economist.policies.retry_economist_naive_plan import RetryEconomistNaivePlanPolicy
 from retry_economist.policies.retry_economist_prior import RetryEconomistPriorPolicy
 from retry_economist.policies.rules_only import RulesOnlyPolicy
 from retry_economist.router.router import Router
@@ -77,6 +78,11 @@ CLV_SWEEP_PAISE: tuple[int, ...] = (400_000, 1_200_000, 3_000_000)
 DISCOUNT_RATE_SWEEP: tuple[float, ...] = (0.005, 0.02, 0.05)
 
 RETRY_ECONOMIST_PRIOR_NAME = "retry_economist (prior)"
+RETRY_ECONOMIST_NAIVE_PLAN_NAME = "retry_economist (naive plan)"
+
+#: Every plan-source name that needs the train-only historical prior fitted
+#: before `build_policies` runs - see `_PRIOR_CONTEXT`.
+PRIOR_BASED_POLICIES: tuple[str, ...] = (RETRY_ECONOMIST_PRIOR_NAME, RETRY_ECONOMIST_NAIVE_PLAN_NAME)
 
 #: Named constructors, so `--policies` takes short names and the counterfactual
 #: store is injected explicitly into anything that needs it.
@@ -94,6 +100,9 @@ FEED_POLICY_BUILDERS: dict[str, Any] = {
     # would resolve at import time, before it exists.
     "llm_router_only": lambda transactions: _build_router_policy(transactions),
     RETRY_ECONOMIST_PRIOR_NAME: lambda transactions: _build_retry_economist_prior_policy(transactions),
+    RETRY_ECONOMIST_NAIVE_PLAN_NAME: (
+        lambda transactions: _build_retry_economist_naive_plan_policy(transactions)
+    ),
 }
 
 #: The incumbent. Fixed-schedule retry is what production dunning systems
@@ -110,6 +119,7 @@ PAIRED_COMPARISONS: tuple[tuple[str, str], ...] = (
     ("llm_router_only (NO ECONOMIST)", "naive_retry_3x"),
     (RETRY_ECONOMIST_PRIOR_NAME, "rules_only"),
     (RETRY_ECONOMIST_PRIOR_NAME, "naive_retry_3x"),
+    (RETRY_ECONOMIST_NAIVE_PLAN_NAME, "naive_retry_3x"),
 )
 
 
@@ -180,7 +190,27 @@ def _build_retry_economist_prior_policy(
     policy = RetryEconomistPriorPolicy(
         SignalIndex(transactions), estimator, daily_discount_rate=rate
     )
-    _PRIOR_CONTEXT["policy"] = policy
+    # Keyed by name, not overwritten by the naive-plan builder below - both
+    # can be built in the same run (the six-policy scoreboard does exactly
+    # that), and each is kept for the report to audit without re-deciding.
+    _PRIOR_CONTEXT.setdefault("policies", {})[RETRY_ECONOMIST_PRIOR_NAME] = policy
+    return policy
+
+
+def _build_retry_economist_naive_plan_policy(
+    transactions: Sequence[ObservedTransaction],
+) -> RetryEconomistNaivePlanPolicy:
+    estimator = _PRIOR_CONTEXT.get("estimator")
+    if estimator is None:
+        raise SystemExit(
+            f"{RETRY_ECONOMIST_NAIVE_PLAN_NAME!r} needs a historical prior fitted on train data "
+            "before it can be built; this is an internal ordering bug in main()"
+        )
+    rate = _PRIOR_CONTEXT.get("daily_discount_rate", DAILY_DISCOUNT_RATE)
+    policy = RetryEconomistNaivePlanPolicy(
+        SignalIndex(transactions), estimator, daily_discount_rate=rate
+    )
+    _PRIOR_CONTEXT.setdefault("policies", {})[RETRY_ECONOMIST_NAIVE_PLAN_NAME] = policy
     return policy
 
 
@@ -1391,9 +1421,12 @@ def main(argv: list[str] | None = None) -> int:
     # scored would let it see the outcomes it is being graded against.
     train = filter_split(transactions, splits, "train")
     fitted_prior: cal.HistoricalPrior | None = None
-    if RETRY_ECONOMIST_PRIOR_NAME in policy_names or "llm_router_only" in policy_names:
+    needs_prior = any(name in policy_names for name in PRIOR_BASED_POLICIES) or (
+        "llm_router_only" in policy_names
+    )
+    if needs_prior:
         fitted_prior = cal.HistoricalPrior.fit(train, store)
-    if RETRY_ECONOMIST_PRIOR_NAME in policy_names:
+    if any(name in policy_names for name in PRIOR_BASED_POLICIES):
         _PRIOR_CONTEXT["estimator"] = historical_prior_estimator(fitted_prior)
         _PRIOR_CONTEXT["daily_discount_rate"] = args.discount_rate
         _PRIOR_CONTEXT["prior"] = fitted_prior

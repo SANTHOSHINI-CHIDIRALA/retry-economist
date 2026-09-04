@@ -13,7 +13,7 @@ claim is measured against three baselines rather than asserted.
 | 2 — Evaluation harness (the scoreboard) | ✅ COMPLETE |
 | 3 — Three baselines | ✅ COMPLETE |
 | 4 — Three-signal router | 🟡 REAL MODEL PINNED, RUN IN PROGRESS — full holdout call is running in the background against a hard free-tier rate limit; partial cache only so far, see note below |
-| 5 — Economist layer (approve / veto) | ✅ COMPLETE against the historical-prior estimator (no LLM). LLM-probability pairing waits on Phase 4's background run. |
+| 5 — Economist layer (approve / veto) | ✅ COMPLETE against the historical-prior estimator, two plan sources (no LLM). LLM-priced pairing remains open, waiting on Phase 4. |
 | 6 — Bounded execution + audit trail | ⬜ NOT STARTED |
 | 7 — Demo, README, architecture diagram | ⬜ NOT STARTED |
 
@@ -324,14 +324,27 @@ instead (see the status update above) - the STAND-IN calibration numbers above
 are transcribed here for reference and are not currently reproducible from the
 committed `results/` directory in this state.
 
-## ✅ Phase 5 — Economist layer (historical-prior estimator; LLM estimator pending)
+## ✅ Phase 5 — COMPLETE (against the historical prior; LLM-priced pairing open)
 
 Built in `src/retry_economist/economist/`: `EVTerms` (every term of the formula
 itemised), five hard compliance rules (`C1`-`C5`, each able only to REMOVE an
 action, never add or reorder one), and `Economist.decide()` returning
-`approve` / `approve_truncated` / `veto` with a full audit trail. 174 tests
+`approve` / `approve_truncated` / `veto` with a full audit trail. 178 tests
 pass, including a property test per compliance rule with a ₹10-crore
 transaction confirming EV never overrides one.
+
+Two plan sources are wired to the SAME economist and estimator
+(`src/retry_economist/policies/retry_economist_prior.py` /
+`retry_economist_naive_plan.py`, sharing a common `EconomistOverPlan` base):
+**`retry_economist (prior)`** prices `rules_only`'s plan; **`retry_economist
+(naive plan)`** prices `naive_retry_3x`'s fixed three-attempt ladder instead.
+The second exists specifically to isolate what the ECONOMIST alone
+contributes: `rules_only` already discriminates by failure code before the
+economist ever sees a plan, so the gap between it and `retry_economist
+(prior)` understates the economist's own value. `naive_retry_3x` proposes the
+identical ladder regardless of what failed - including on blocked cards and
+risk declines - so every improvement over it is attributable to the economist
+alone.
 
 ```
 EV(plan) = amount_paise × VALUE_CAPTURE_RATE × delta_p × discount(days)
@@ -359,14 +372,15 @@ proposal, so any difference from plain `rules_only` is attributable to the
 economics, not to a better plan. The LLM-priced pairing (router's plan +
 either estimator) is deferred until Phase 4's run lands.
 
-### Main result — full 749-transaction holdout, no LLM involved
+### Main result — six-policy holdout scoreboard, no LLM involved
 
 | policy | recovery | uplift pp | decision P / R / F1 | attempts | cost INR | net value INR | INR/INR |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `do_nothing` | 23.4% | +0.0 | n/a / 0.0% / n/a | 0 | 0 | 0 | n/a |
 | `naive_retry_3x` | 39.0% | +15.6 | 20.8% / 96.7% / 34.2% | 1,430 | 41,010 | 309,823 | 0.12 |
 | `rules_only` | **47.9%** | **+24.6** | 31.0% / 83.6% / 45.2% | 568 | 30,813 | 684,974 | 0.04 |
-| `retry_economist (prior)` | 45.4% | +22.0 | 32.4% / 73.0% / 44.9% | **515** | **17,018** | **688,983** | **0.02** |
+| `retry_economist (naive plan)` | 33.0% | +9.6 | 28.2% / 33.3% / 30.6% | 513 | **14,917** | 322,066 | 0.04 |
+| `retry_economist (prior)` | 45.4% | +22.0 | 32.4% / 73.0% / 44.9% | **515** | 17,018 | **688,983** | **0.02** |
 | `oracle_best` (CHEATS) | 61.4% | +38.1 | 100% / 100% / 100% | 240 | 16,612 | 981,483 | 0.02 |
 
 Paired bootstrap, same customers resampled both arms (2,000 iterations):
@@ -377,16 +391,26 @@ Paired bootstrap, same customers resampled both arms (2,000 iterations):
 | `rules_only` vs `do_nothing` | +24.57 [+21.61, +27.74] | +0.452 [+0.414, +0.492] | yes |
 | `retry_economist (prior)` vs `rules_only` | **−2.54 [−3.63, −1.52]** | −0.004 [−0.022, +0.015] | uplift: yes (economist recovers LESS) · F1: no |
 | `retry_economist (prior)` vs `naive_retry_3x` | +6.41 [+3.25, +9.80] | +0.106 [+0.062, +0.154] | yes |
+| `retry_economist (naive plan)` vs `naive_retry_3x` | **−6.01 [−8.53, −3.66]** | −0.037 [−0.075, +0.002] | uplift: yes (economist recovers LESS) · F1: no |
 
-**Stated plainly, because it is the honest result:** the economist recovers
-**significantly less** than `rules_only` (−2.54pp, CI excludes zero) while
-spending **45% less** (17,018 vs 30,813 INR) and using **9% fewer attempts**
-(515 vs 568). It still beats the production-realistic baseline
-(`naive_retry_3x`) on both uplift and decision F1. This is EV-gating doing
-exactly what it is built to do: decline some actions that would have worked
-because, priced against the historical prior's probabilities, they were not
-worth the expected annoyance/attempt cost. Whether that trade is "worth it"
-depends on the CLV assumption - see the sweep below - not on a single number.
+**Stated plainly, because it is the honest result:** paired against its OWN
+plan source, `retry_economist (naive plan)` recovers **significantly less**
+than `naive_retry_3x` (−6.01pp, CI excludes zero) - fully vetoing 415 of the
+702 transactions naive proposed to act on (59%; 287 approved unchanged, none
+truncated - see the verdict counts below) costs real recovery, not just
+waste. But it also spends **64% less** (14,917 vs 41,010 INR) for a
+**higher net value** (322,066 vs 309,823), because almost everything it
+vetoed was either guaranteed to fail (hard/risk declines, expired mandates -
+see below) or was economically not worth its cost. Against `rules_only`'s
+plan the same trade appears smaller (−2.54pp, 45% less spend) because
+`rules_only` had already filtered out most of the obviously-bad actions
+itself; against `naive_retry_3x`'s blind plan the ECONOMIST's own contribution
+is fully exposed, and it is larger in both directions - more recovery given
+up, more spend avoided. This is EV-gating doing exactly what it is built to
+do: decline actions that would have worked because, priced against the
+historical prior's probabilities, they were not worth the expected
+annoyance/attempt cost. Whether the trade is "worth it" depends on the CLV
+assumption - see the sweep below - not on a single number.
 
 ### Sensitivity: does the trade survive changing the assumptions?
 
@@ -421,7 +445,7 @@ this cannot be a post-hoc reweighting the way the CLV sweep is):
   it was already behind at the default rate, and a higher discount rate (which
   penalises `retry_next_salary_day`'s wait more) only widens the gap.
 
-### Veto precision - what did vetoing actually cost?
+### Veto precision — `retry_economist (prior)` (rules_only's plan)
 
 Of `rules_only`'s 610 non-empty proposals, the economist fully approved 525,
 truncated none, and fully vetoed 85 (139 more transactions had no proposal to
@@ -434,42 +458,124 @@ begin with - `rules_only` itself abstained). Full breakdown in
 | compliance-driven (`C5_CONTACT_CAP`) | 30 | 14 | 46.7% |
 | economics-driven (`EV<=0`) | 55 | 29 | 52.7% |
 
-**Only `C5_CONTACT_CAP` fired on real holdout data** - `C1`, `C2`, `C3` and `C4`
-never removed a single action. Not a bug: `rules_only` already abstains on
-every hard decline, risk decline and expired mandate itself (see its `RULES`
-table and message fallback), and it already respects the attempt cap before
-proposing anything, so those four rules never see a live plan to veto under
-THIS pairing. `results/veto_demo.txt` demonstrates `C1` directly on a
-constructed transaction instead (see below), stating plainly that it is
-constructed and why a real example does not exist under this pairing.
+**Only `C5_CONTACT_CAP` fired against `rules_only`'s plan** - `C1`, `C2`, `C3`
+and `C4` never removed a single action there. Not a bug: `rules_only` already
+abstains on every hard decline, risk decline and expired mandate itself, and
+already respects the attempt cap before proposing anything, so those four
+rules never see a live plan to veto under THIS pairing. The naive-plan pairing
+below is what exposes them.
 
 **Veto precision just above 50% is the honest headline of this sub-result**:
 roughly half of what the economist vetoed on economic or contact-cap grounds
 would, per the oracle, have recovered the payment. That is the real price of
 the caution behind the −2.54pp uplift gap above - not a free lunch.
 
-### The RISK_DECLINED veto demo
+### The economist's isolated contribution — `retry_economist (naive plan)`
 
-`results/veto_demo.txt` is a full trace - real calls to `compute_ev`,
-`apply_compliance` and `Economist.decide`, nothing hand-computed - on a
-CONSTRUCTED transaction (stated as such in the file itself) built to isolate
-`C1`, primed with a deliberately optimistic estimator (85% assumed success):
-hypothetical EV **+INR 18,711.78**, and the actual decision is still
-`veto`, plan `()`, because `C1_RISK_DECLINED` removed the only proposed
-action before any EV arithmetic ran. Same guarantee
+Pairing the SAME economist and estimator with `naive_retry_3x`'s
+failure-code-blind ladder instead gives all five compliance rules real
+ammunition, and gives a clean, plan-source-independent measurement of what the
+economist itself is worth. Full breakdown in
+`results/veto_precision_naive_plan.md`.
+
+**Compliance rule firing counts** (of 702 non-empty `naive_retry_3x`
+proposals; 47 more transactions had `attempts_left == 0` and no proposal at
+all):
+
+| rule | fired on n transactions |
+| --- | ---: |
+| `C1_RISK_DECLINED` | 39 |
+| `C2_HARD_DECLINE_NO_DEBIT` | 54 |
+| `C3_ATTEMPT_CAP` | 0 |
+| `C4_EXPIRED_MANDATE` | 41 |
+| `C5_CONTACT_CAP` | 0 |
+
+`C1`, `C2` and `C4` are non-zero here, exactly because this plan source does
+not discriminate the way `rules_only` does. `C3` and `C5` are still zero, for
+two DIFFERENT, mechanical reasons rather than one: `naive_retry_3x` already
+truncates its own ladder to `attempts_left` before proposing anything (see
+`policies/naive_retry.py`), so `C3`'s double-guard never finds a plan over
+budget; and the ladder is three retry actions only, none of which
+`contacts_customer` (see `economist/costs.py`), so `C5` structurally has
+nothing to remove regardless of `comms_received_last_7d`.
+
+**Verdict counts**: 287 `approve`, **0 `approve_truncated`**, 415 `veto`.
+`approve_truncated` still did not fire, and now for a reason confirmed by data
+rather than assumed: `naive_retry_3x`'s ladder is three actions of the SAME
+kind (debit retries), so `C1`/`C2`/`C4` always remove either none of it or ALL
+of it - there is never a partial removal to truncate. A plan source that mixes
+action types (a debit retry alongside a contact action, say) is what would
+give a compliance rule something to remove PART of; the LLM router's plan is
+the first candidate for that once Phase 4 lands.
+
+**`hard_decline_retry_waste`** - debit attempts spent retrying an instrument
+already classed as a hard decline, which no retry on any rail can ever clear:
+
+| policy | hard_decline_retry_waste |
+| --- | ---: |
+| `naive_retry_3x` | **245** |
+| `retry_economist (naive plan)` | **0** |
+
+Given the IDENTICAL proposed ladder on every one of those transactions, this
+245 → 0 delta is attributable entirely to `C1` and `C2` - the single clearest
+demonstration in this project of what the economist is for. (Phase 3's
+PROGRESS.md entry cites 124 hard-decline attempts; that figure predates this
+measurement and its exact split/scale was not re-verified here, so it is
+noted rather than reconciled - 245 is the number this run actually produced,
+on the current 749-transaction holdout, computed by `eval/metrics.py`'s
+existing `hard_decline_retry_waste` field.)
+
+**Veto precision, compliance vs economics:**
+
+| split | n vetoed actions | would have failed anyway | veto precision |
+| --- | ---: | ---: | ---: |
+| all vetoes | 1,115 | 796 | 71.4% |
+| compliance-driven (`C1`+`C2`+`C4`) | 335 | 329 | **98.2%** |
+| economics-driven (`EV<=0`) | 780 | 467 | 59.9% |
+
+| rule | n vetoed actions | would have failed anyway | veto precision |
+| --- | ---: | ---: | ---: |
+| `C1_RISK_DECLINED` | 101 | 101 | **100.0%** |
+| `C2_HARD_DECLINE_NO_DEBIT` | 144 | 144 | **100.0%** |
+| `C4_EXPIRED_MANDATE` | 90 | 84 | 93.3% |
+| `EV<=0` | 780 | 467 | 59.9% |
+
+**The compliance rules are near-perfect (98.2% combined; `C1` and `C2` exactly
+100%): everything they vetoed on this holdout would have failed anyway - they
+cost nothing.** The economics gate is where the real trade-off lives: 59.9%
+precision means roughly 4 in 10 economically-vetoed actions would actually
+have recovered the payment. That is consistent with the −6.01pp uplift loss
+above, and it says plainly where this policy's caution is expensive and where
+it is free.
+
+### The RISK_DECLINED veto demo — now with a real transaction
+
+`results/veto_demo_real.txt` is the PRIMARY demo: a full trace, on a REAL
+holdout transaction (`pay_00647`, INR 60,000, code `R05` /
+`"R05 -- SUSPECTED FRAUD, BLOCKED"`), found via `retry_economist (naive plan)`
+- `naive_retry_3x` proposes its ladder on this transaction regardless of the
+risk decline, so `C1` has something real to veto. Reported exactly as
+measured, including where it differs from what was expected going in: of the
+39 real transactions where `C1` fired this way, **0 of 39 had a positive
+hypothetical EV** against the real train-fitted historical prior (the traced
+one: **−INR 61.60**). The prior has already learned that risk declines
+essentially never recover, so on this holdout `C1` turned out to be redundant
+with the economics rather than overriding it - a finding about how well the
+prior generalises, not a gap in the demo. `results/veto_demo.txt` (the earlier
+CONSTRUCTED transaction, primed with a deliberately optimistic estimator to
+show a **+INR 18,711.78** hypothetical EV) is kept as a fallback specifically
+because it is the one place a positive-EV override is shown explicitly; both
+files cross-reference each other. The underlying guarantee - `C1` removes the
+plan before any EV arithmetic runs, positive or not - is the same property
 `tests/test_economist.py::test_c1_vetoes_a_risk_decline_at_any_expected_value`
-asserts, shown at a realistic transaction size with every intermediate number
-visible.
+asserts.
 
 ### What's still open
 
 - The LLM-priced pairing (router's plan, either estimator) waits on Phase 4's
-  background run - see the status update in that section.
-- `approve_truncated` never fired on this holdout: `rules_only` proposes at
-  most one action per transaction, so compliance filtering a plan either
-  empties it (→ `veto`) or leaves it whole (→ `approve`). The truncation path
-  is exercised by unit tests (`test_approve_truncated_when_compliance_removes_something_but_the_rest_is_profitable`)
-  and will show up for real once a multi-action plan source (the LLM) is wired in.
+  background run - see the status update in that section. Adding it means
+  wiring a third plan source into `EconomistOverPlan`, not touching the
+  economist itself.
 
 ## ⬜ Phase 6 — Bounded execution + audit trail
 
@@ -483,6 +589,8 @@ visible.
 pip install -e .
 python -m retry_economist.generator.cli --seed 42 --n 2500 --customers 900
 python -m retry_economist.eval.cli --split holdout --policies do_nothing,naive_retry_3x,rules_only,oracle_best
+python -m retry_economist.eval.cli --split holdout \
+    --policies "do_nothing,naive_retry_3x,rules_only,retry_economist (naive plan),retry_economist (prior),oracle_best"
 python -m retry_economist.eval.cli --split holdout \
     --policies "do_nothing,naive_retry_3x,rules_only,retry_economist (prior),oracle_best" \
     --clv-sweep --discount-sweep

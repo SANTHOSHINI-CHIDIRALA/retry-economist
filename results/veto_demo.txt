@@ -1,6 +1,19 @@
 ==============================================================================
-C1 (RISK_DECLINED) VETO DEMO
+C1 (RISK_DECLINED) VETO DEMO  [FALLBACK - see results/veto_demo_real.txt for
+the PRIMARY demo, on 39 real holdout transactions]
 ==============================================================================
+
+results/veto_demo_real.txt now documents the same guarantee on real holdout
+data instead: retry_economist (naive plan) pairs naive_retry_3x's plan (which,
+unlike rules_only's, does not discriminate by failure code and so gives C1
+real risk-declined transactions to veto) with the economist. That file is the
+primary artefact; keep this one as a fallback because it was reachable before
+that pairing existed, and because it demonstrates a POSITIVE hypothetical
+EV, which - reported honestly - none of the 39 real cases had: the train-fitted
+historical prior already learned that risk declines essentially never recover,
+so on real data C1 turned out to be redundant with the economics there, not
+overriding it. That is itself a finding, not a gap this file needed to paper
+over.
 
 THIS TRANSACTION IS CONSTRUCTED, NOT FROM THE REAL HOLDOUT.
 On the real 749-txn holdout, rules_only never proposes a non-empty plan for a risk-declined transaction (its own rule table already abstains on fraud/risk-flagged declines), so C1 never gets a live plan to veto under the retry_economist (prior) pairing - see results/veto_precision.md, where C1_RISK_DECLINED does not appear in the by-rule breakdown at all. This transaction isolates the guarantee directly instead.

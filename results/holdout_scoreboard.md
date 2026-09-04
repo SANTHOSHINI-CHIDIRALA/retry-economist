@@ -19,6 +19,7 @@
 | `do_nothing` | ok | n/a | 0.0% | n/a | 0.0% | n/a | n/a | 0.0% | n/a | 23.4% [20.4, 26.3] | +0.0 [+0.0, +0.0] | 20.6% | +0.0 | 1.48 | 1.51 | 23.4% | 0.0% | 749 | 61.9% | 0 | 0 | 0 | n/a (no net revenue) | 0 | 0.0% | 0 |
 | `naive_retry_3x` | ok | 20.8% | 96.7% | 34.2% | 51.2% | 47.9% | 11.8% | 95.2% | 21.1% | 39.0% [34.9, 43.0] | +15.6 [+12.2, +18.9] | 30.5% | +9.9 | 0.01 | 0.13 | 39.0% | 93.7% | 47 | 89.4% | 350,833 | 41,010 | 309,823 | 0.12 | 1430 | 0.0% | 0 |
 | `rules_only` | ok | 31.0% | 83.6% | 45.2% | 66.3% | 23.8% | 29.4% | 83.0% | 43.4% | 47.9% [44.1, 51.7] | +24.6 [+21.6, +27.7] | 40.8% | +20.2 | 2.09 | 6.04 | 25.9% | 81.4% | 139 | 73.4% | 715,787 | 30,813 | 684,974 | 0.04 | 568 | 14.0% | 0 |
+| `retry_economist (naive plan)` | ok | 28.2% | 33.3% | 30.6% | 28.4% | 34.1% | 16.7% | 58.1% | 25.9% | 33.0% [29.3, 36.5] | +9.6 [+7.1, +12.1] | 30.1% | +9.5 | 0.02 | 0.61 | 33.0% | 38.3% | 462 | 64.9% | 336,983 | 14,917 | 322,066 | 0.04 | 513 | 0.0% | 0 |
 | `retry_economist (prior)` | ok | 32.4% | 73.0% | 44.9% | 59.6% | 23.4% | 31.2% | 79.2% | 44.8% | 45.4% [41.6, 49.1] | +22.0 [+19.2, +25.1] | 40.5% | +19.9 | 2.13 | 5.98 | 24.8% | 70.1% | 224 | 71.9% | 706,001 | 17,018 | 688,983 | 0.02 | 515 | 5.1% | 0 |
 
 ## Reference bounds - NOT RESULTS
@@ -42,6 +43,7 @@ Split first on whether the policy acted at all. Restraint is not failure: leavin
 | `do_nothing` | 0 | 0 | 0 | 0 | 0 | 0 | 749 | 175 | 289 | 285 | 749/749 |
 | `naive_retry_3x` | 702 | 146 | 29 | 137 | 256 | 134 | 47 | 9 | 33 | 5 | 749/749 |
 | `rules_only` | 610 | 189 | 5 | 161 | 196 | 59 | 139 | 9 | 93 | 37 | 749/749 |
+| `retry_economist (naive plan)` | 287 | 81 | 9 | 72 | 83 | 42 | 462 | 94 | 206 | 162 | 749/749 |
 | `retry_economist (prior)` | 525 | 170 | 5 | 138 | 160 | 52 | 224 | 32 | 129 | 63 | 749/749 |
 | `oracle_best (CHEATS)` | 285 | 285 | 0 | 0 | 0 | 0 | 464 | 175 | 289 | 0 | 749/749 |
 
@@ -54,6 +56,7 @@ The same seven buckets as a share of the money, not of the invoice count. Amount
 | `do_nothing` | 3,544,846 | 0.0% | 0.0% | 0.0% | 0.0% | 20.6% | 51.2% | 28.2% | 100.0% |
 | `naive_retry_3x` | 3,544,846 | 11.0% | 1.1% | 16.6% | 64.3% | 2.9% | 3.5% | 0.6% | 100.0% |
 | `rules_only` | 3,544,846 | 20.9% | 0.7% | 17.0% | 32.5% | 2.9% | 21.7% | 4.3% | 100.0% |
+| `retry_economist (naive plan)` | 3,544,846 | 10.4% | 0.9% | 16.1% | 35.2% | 3.6% | 26.2% | 7.5% | 100.0% |
 | `retry_economist (prior)` | 3,544,846 | 20.7% | 0.7% | 15.0% | 29.9% | 4.9% | 23.4% | 5.4% | 100.0% |
 | `oracle_best (CHEATS)` | 3,544,846 | 28.2% | 0.0% | 0.0% | 0.0% | 20.6% | 51.2% | 0.0% | 100.0% |
 
@@ -67,6 +70,7 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `rules_only` vs `do_nothing` | +24.57 [+21.61, +27.74] | yes | +0.4522 [+0.4139, +0.4920] | yes |
 | `retry_economist (prior)` vs `rules_only` | -2.54 [-3.63, -1.52] | yes | -0.0036 [-0.0222, +0.0145] | no |
 | `retry_economist (prior)` vs `naive_retry_3x` | +6.41 [+3.25, +9.80] | yes | +0.1062 [+0.0620, +0.1537] | yes |
+| `retry_economist (naive plan)` vs `naive_retry_3x` | -6.01 [-8.53, -3.66] | yes | -0.0367 [-0.0754, +0.0020] | no |
 
 ## Breakdown by failure code
 
@@ -109,6 +113,19 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `U69` | 36 | 27.3% | 90.0% | 41.9% | 12 | 75.0% | 18.2% | 20.9% | 99.6% | 34.6% | 52.8% | 27.8% | +25.0 | 46.4% | +20.6 | 0.10 | 0.19 | 52.8% | 9 | 0 | 13 | 2 | 1 | 66.7% | 25,758 | 33 |
 | `ACS_TIMEOUT` | 34 | 6.7% | 100.0% | 12.5% | 3 | 66.7% | 33.3% | 1.5% | 100.0% | 2.9% | 47.1% | 41.2% | +5.9 | 67.8% | +1.2 | 0.34 | 0.46 | 47.1% | 2 | 0 | 14 | 1 | 0 | 100.0% | 2,619 | 30 |
 
+#### `retry_economist (naive plan)` by failure code
+
+| failure code | n | precision | recall | F1 | addressable | capture | selection error | precision (INR-wt) | recall (INR-wt) | F1 (INR-wt) | recovery | organic | uplift pp | recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | hopeless | wrong action | missed | restraint precision | net INR | attempts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `51` | 360 | 16.4% | 20.4% | 18.2% | 134 | 15.7% | 59.6% | 8.7% | 65.1% | 15.4% | 32.5% | 28.9% | +3.6 | 25.2% | +4.8 | 0.60 | 0.94 | 32.5% | 21 | 8 | 43 | 31 | 82 | 64.7% | 62,200 | 253 |
+| `91` | 129 | 43.0% | 60.7% | 50.4% | 64 | 53.1% | 19.0% | 25.0% | 96.2% | 39.7% | 48.1% | 22.5% | +25.6 | 60.3% | +24.0 | 0.02 | 0.20 | 48.1% | 34 | 1 | 15 | 8 | 22 | 56.0% | 122,240 | 132 |
+| `41` | 57 | n/a | 0.0% | n/a | 22 | 0.0% | n/a | n/a | 0.0% | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 0 | 0 | 22 | 61.4% | 0 | 0 |
+| `96` | 56 | 46.7% | 87.5% | 60.9% | 25 | 84.0% | 4.5% | 35.2% | 99.7% | 52.0% | 64.3% | 26.8% | +37.5 | 63.6% | +34.8 | 0.01 | 0.06 | 64.3% | 21 | 0 | 10 | 1 | 3 | 72.7% | 127,620 | 63 |
+| `R05` | 41 | n/a | 0.0% | n/a | 10 | 0.0% | n/a | n/a | 0.0% | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 0 | 0 | 10 | 75.6% | 0 | 0 |
+| `MANDATE_EXPIRED_M06` | 36 | n/a | 0.0% | n/a | 15 | 0.0% | n/a | n/a | 0.0% | n/a | 8.3% | 8.3% | +0.0 | 0.2% | +0.0 | 2.00 | 1.77 | 8.3% | 0 | 0 | 0 | 0 | 15 | 58.3% | 0 | 0 |
+| `U69` | 36 | 22.2% | 36.4% | 27.6% | 12 | 33.3% | 20.0% | 20.0% | 89.4% | 32.6% | 38.9% | 27.8% | +11.1 | 44.7% | +18.9 | 0.10 | 0.70 | 38.9% | 4 | 0 | 9 | 1 | 7 | 61.1% | 23,572 | 38 |
+| `ACS_TIMEOUT` | 34 | 5.9% | 50.0% | 10.5% | 3 | 33.3% | 50.0% | 0.8% | 69.5% | 1.6% | 44.1% | 41.2% | +2.9 | 67.2% | +0.6 | 0.02 | 0.61 | 44.1% | 1 | 0 | 6 | 1 | 1 | 94.1% | 1,351 | 27 |
+
 #### `retry_economist (prior)` by failure code
 
 | failure code | n | precision | recall | F1 | addressable | capture | selection error | precision (INR-wt) | recall (INR-wt) | F1 (INR-wt) | recovery | organic | uplift pp | recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | hopeless | wrong action | missed | restraint precision | net INR | attempts |
@@ -134,51 +151,6 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `MANDATE_EXPIRED_M06` | 36 | 100.0% | 100.0% | 100.0% | 15 | 100.0% | 0.0% | 100.0% | 100.0% | 100.0% | 50.0% | 8.3% | +41.7 | 37.5% | +37.3 | 1.32 | 1.32 | 47.2% | 15 | 0 | 0 | 0 | 0 | 100.0% | 75,181 | 7 |
 | `U69` | 36 | 100.0% | 100.0% | 100.0% | 12 | 100.0% | 0.0% | 100.0% | 100.0% | 100.0% | 61.1% | 27.8% | +33.3 | 68.7% | +42.9 | 0.40 | 0.85 | 61.1% | 12 | 0 | 0 | 0 | 0 | 100.0% | 53,547 | 11 |
 | `ACS_TIMEOUT` | 34 | 100.0% | 100.0% | 100.0% | 3 | 100.0% | 0.0% | 100.0% | 100.0% | 100.0% | 50.0% | 41.2% | +8.8 | 68.0% | +1.5 | 1.23 | 1.32 | 50.0% | 3 | 0 | 0 | 0 | 0 | 100.0% | 3,213 | 3 |
-
-## Sensitivity to customer lifetime value
-
-Customer lifetime value is an ASSUMPTION, not a measurement, and annoyance cost scales linearly with it. Each policy below is re-priced across a range wide enough to cover any plausible value. Net *revenue* is invariant by construction - no churn assumption touches it - so net *value*, which subtracts what the recovery cost, is the column that moves.
-
-> The ranking FLIPS within the sweep (best policy varies: `retry_economist (prior)`, `rules_only`). The conclusion is an artefact of the lifetime-value assumption and must not be stated without it.
-
-| policy | CLV (INR) | net revenue INR | annoyance cost INR | net value INR | INR spent per INR earned |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `do_nothing` | 4,000 | 0 | 0 | 0 | n/a (no net revenue) |
-| `do_nothing` | 12,000 | 0 | 0 | 0 | n/a (no net revenue) |
-| `do_nothing` | 30,000 | 0 | 0 | 0 | n/a (no net revenue) |
-| `naive_retry_3x` | 4,000 | 350,833 | 12,717 | 335,257 | 0.04 |
-| `naive_retry_3x` | 12,000 | 350,833 | 38,150 | 309,823 | 0.12 |
-| `naive_retry_3x` | 30,000 | 350,833 | 95,376 | 252,597 | 0.28 |
-| `rules_only` | 4,000 | 715,787 | 9,811 | 704,596 | 0.02 |
-| `rules_only` | 12,000 | 715,787 | 29,434 | 684,974 | 0.04 |
-| `rules_only` | 30,000 | 715,787 | 73,584 | 640,824 | 0.10 |
-| `retry_economist (prior)` | 4,000 | 706,001 | 5,309 | 699,601 | 0.0091 |
-| `retry_economist (prior)` | 12,000 | 706,001 | 15,926 | 688,983 | 0.02 |
-| `retry_economist (prior)` | 30,000 | 706,001 | 39,816 | 665,094 | 0.06 |
-| `oracle_best (CHEATS) (bound)` | 4,000 | 998,095 | 5,178 | 991,838 | 0.0063 |
-| `oracle_best (CHEATS) (bound)` | 12,000 | 998,095 | 15,533 | 981,483 | 0.02 |
-| `oracle_best (CHEATS) (bound)` | 30,000 | 998,095 | 38,832 | 958,183 | 0.04 |
-
-| policy | verdict |
-| --- | --- |
-| `do_nothing` | robust - net value keeps its sign across the whole range |
-| `naive_retry_3x` | robust - net value keeps its sign across the whole range |
-| `rules_only` | robust - net value keeps its sign across the whole range |
-| `retry_economist (prior)` | robust - net value keeps its sign across the whole range |
-| `oracle_best (CHEATS)` | robust - net value keeps its sign across the whole range |
-
-## Sensitivity to the daily discount rate
-
-`retry_economist (prior)` is RE-DECIDED at each rate, not re-priced like the CLV sweep above: the discount factor sits inside the EV threshold the economist checks before anything executes, so a different rate can change which transactions are approved, truncated or vetoed outright - the executed plans differ, not just how a fixed set of plans is valued.
-
-| daily rate | recovery | net uplift pp | net value INR | action rate |
-| --- | ---: | ---: | ---: | ---: |
-| 0.005 | 45.8% | +22.43 | 688,721 | 72.0% |
-| 0.020 | 45.4% | +22.03 | 688,983 | 70.1% |
-| 0.050 | 44.7% | +21.36 | 688,794 | 66.1% |
-
-> vs `rules_only` (net uplift +24.57 pp): advantage DOES NOT SURVIVE every rate tested.
-> vs `naive_retry_3x` (net uplift +15.62 pp): advantage SURVIVES every rate tested.
 
 ## Cost assumptions
 
