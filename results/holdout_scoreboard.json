@@ -3901,5 +3901,125 @@
     }
   ],
   "multiseed": [],
-  "clv_sweep": {}
+  "clv_sweep": {
+    "rows": [
+      {
+        "policy": "do_nothing",
+        "is_reference_bound": false,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 0.0,
+            "annoyance_cost_rupees": 0.0,
+            "net_value_rupees": 0.0,
+            "cost_per_incremental_rupee": null
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      },
+      {
+        "policy": "naive_retry_3x",
+        "is_reference_bound": false,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 350833.31,
+            "annoyance_cost_rupees": 12716.8,
+            "net_value_rupees": 335256.51,
+            "cost_per_incremental_rupee": 0.0444
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 350833.31,
+            "annoyance_cost_rupees": 38150.4,
+            "net_value_rupees": 309822.91,
+            "cost_per_incremental_rupee": 0.1169
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 350833.31,
+            "annoyance_cost_rupees": 95376.0,
+            "net_value_rupees": 252597.31,
+            "cost_per_incremental_rupee": 0.28
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      },
+      {
+        "policy": "rules_only",
+        "is_reference_bound": false,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 715786.63,
+            "annoyance_cost_rupees": 9811.2,
+            "net_value_rupees": 704596.43,
+            "cost_per_incremental_rupee": 0.0156
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 715786.63,
+            "annoyance_cost_rupees": 29433.6,
+            "net_value_rupees": 684974.03,
+            "cost_per_incremental_rupee": 0.043
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 715786.63,
+            "annoyance_cost_rupees": 73584.0,
+            "net_value_rupees": 640823.63,
+            "cost_per_incremental_rupee": 0.1047
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      },
+      {
+        "policy": "oracle_best (CHEATS)",
+        "is_reference_bound": true,
+        "points": [
+          {
+            "clv_rupees": 4000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 5177.6,
+            "net_value_rupees": 991837.75,
+            "cost_per_incremental_rupee": 0.0063
+          },
+          {
+            "clv_rupees": 12000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 15532.8,
+            "net_value_rupees": 981482.55,
+            "cost_per_incremental_rupee": 0.0166
+          },
+          {
+            "clv_rupees": 30000.0,
+            "net_rupees": 998094.75,
+            "annoyance_cost_rupees": 38832.0,
+            "net_value_rupees": 958183.35,
+            "cost_per_incremental_rupee": 0.04
+          }
+        ],
+        "verdict": "robust - net value keeps its sign across the whole range",
+        "robust": true
+      }
+    ],
+    "conclusion": "The ranking survives the sweep: `rules_only` has the highest net value at every lifetime value tested, so the conclusion is about the policy, not the guess."
+  }
 }

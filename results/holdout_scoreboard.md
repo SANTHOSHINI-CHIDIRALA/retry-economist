@@ -115,6 +115,34 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `U69` | 36 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 61.1% | 27.8% | +33.3 | 68.7% | +42.9 | 0.40 | 0.85 | 61.1% | 12 | 0 | 0 | 100.0% | 53,547 | 11 |
 | `ACS_TIMEOUT` | 34 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 50.0% | 41.2% | +8.8 | 68.0% | +1.5 | 1.23 | 1.32 | 50.0% | 3 | 0 | 0 | 100.0% | 3,213 | 3 |
 
+## Sensitivity to customer lifetime value
+
+Customer lifetime value is an ASSUMPTION, not a measurement, and annoyance cost scales linearly with it. Each policy below is re-priced across a range wide enough to cover any plausible value. Net *revenue* is invariant by construction - no churn assumption touches it - so net *value*, which subtracts what the recovery cost, is the column that moves.
+
+> The ranking survives the sweep: `rules_only` has the highest net value at every lifetime value tested, so the conclusion is about the policy, not the guess.
+
+| policy | CLV (INR) | net revenue INR | annoyance cost INR | net value INR | INR spent per INR earned |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `do_nothing` | 4,000 | 0 | 0 | 0 | n/a (no net revenue) |
+| `do_nothing` | 12,000 | 0 | 0 | 0 | n/a (no net revenue) |
+| `do_nothing` | 30,000 | 0 | 0 | 0 | n/a (no net revenue) |
+| `naive_retry_3x` | 4,000 | 350,833 | 12,717 | 335,257 | 0.04 |
+| `naive_retry_3x` | 12,000 | 350,833 | 38,150 | 309,823 | 0.12 |
+| `naive_retry_3x` | 30,000 | 350,833 | 95,376 | 252,597 | 0.28 |
+| `rules_only` | 4,000 | 715,787 | 9,811 | 704,596 | 0.02 |
+| `rules_only` | 12,000 | 715,787 | 29,434 | 684,974 | 0.04 |
+| `rules_only` | 30,000 | 715,787 | 73,584 | 640,824 | 0.10 |
+| `oracle_best (CHEATS) (bound)` | 4,000 | 998,095 | 5,178 | 991,838 | 0.0063 |
+| `oracle_best (CHEATS) (bound)` | 12,000 | 998,095 | 15,533 | 981,483 | 0.02 |
+| `oracle_best (CHEATS) (bound)` | 30,000 | 998,095 | 38,832 | 958,183 | 0.04 |
+
+| policy | verdict |
+| --- | --- |
+| `do_nothing` | robust - net value keeps its sign across the whole range |
+| `naive_retry_3x` | robust - net value keeps its sign across the whole range |
+| `rules_only` | robust - net value keeps its sign across the whole range |
+| `oracle_best (CHEATS)` | robust - net value keeps its sign across the whole range |
+
 ## Cost assumptions
 
 Every figure below is an estimate; see `eval/costs.py` for the basis of each.
