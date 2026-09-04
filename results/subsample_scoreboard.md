@@ -26,6 +26,7 @@
 | `retry_economist (prior)` | ok | 33.3% | 62.5% | 43.5% | 55.6% | 16.7% | 63.5% | 97.6% | 77.0% | 44.7% [32.0, 57.1] | +21.3 [+10.4, +33.3] | 48.7% | +39.5 | 1.02 | 4.79 | 25.5% | 63.8% | 17 | 64.7% | 87,734 | 963 | 86,771 | 0.01 | 30 | 6.4% | 0 |
 | `retry_economist (naive plan)` | ok | 41.2% | 43.8% | 42.4% | 38.9% | 22.2% | 6.8% | 71.4% | 12.4% | 38.3% [26.2, 51.1] | +14.9 [+6.0, +25.5] | 13.3% | +4.1 | 0.05 | 0.58 | 38.3% | 36.2% | 30 | 70.0% | 9,059 | 845 | 8,214 | 0.09 | 29 | 0.0% | 0 |
 | `llm_router_only (NO ECONOMIST)` | ok | 35.3% | 75.0% | 48.0% | 66.7% | 14.3% | 63.0% | 99.2% | 77.0% | 48.9% [36.2, 61.2] | +25.5 [+13.5, +38.6] | 49.5% | +40.3 | 1.01 | 2.99 | 36.2% | 72.3% | 13 | 69.2% | 89,640 | 2,264 | 87,376 | 0.03 | 29 | 19.1% | 0 |
+| `retry_economist (LLM plan)` | ok | 34.6% | 56.2% | 42.9% | 50.0% | 18.2% | 63.2% | 97.4% | 76.6% | 42.6% [30.4, 55.1] | +19.1 [+8.5, +30.4] | 48.8% | +39.6 | 1.01 | 3.25 | 29.8% | 55.3% | 21 | 66.7% | 87,945 | 1,102 | 86,843 | 0.01 | 25 | 6.4% | 0 |
 
 ## Reference bounds - NOT RESULTS
 
@@ -52,6 +53,7 @@ Split first on whether the policy acted at all. Restraint is not failure: leavin
 | `retry_economist (naive plan)` | 17 | 7 | 0 | 4 | 4 | 2 | 30 | 7 | 14 | 9 | 47/47 |
 | `oracle_best (CHEATS)` | 18 | 18 | 0 | 0 | 0 | 0 | 29 | 11 | 18 | 0 | 47/47 |
 | `llm_router_only (NO ECONOMIST)` | 34 | 12 | 0 | 9 | 11 | 2 | 13 | 2 | 7 | 4 | 47/47 |
+| `retry_economist (LLM plan)` | 26 | 9 | 0 | 7 | 8 | 2 | 21 | 4 | 10 | 7 | 47/47 |
 
 ### Weighted by rupees at risk
 
@@ -66,6 +68,7 @@ The same seven buckets as a share of the money, not of the invoice count. Amount
 | `retry_economist (naive plan)` | 222,179 | 4.1% | 0.0% | 8.2% | 47.7% | 1.0% | 37.4% | 1.6% | 100.0% |
 | `oracle_best (CHEATS)` | 222,179 | 41.3% | 0.0% | 0.0% | 0.0% | 9.2% | 49.6% | 0.0% | 100.0% |
 | `llm_router_only (NO ECONOMIST)` | 222,179 | 40.3% | 0.0% | 8.8% | 14.9% | 0.4% | 35.2% | 0.3% | 100.0% |
+| `retry_economist (LLM plan)` | 222,179 | 39.6% | 0.0% | 8.6% | 14.4% | 0.5% | 35.7% | 1.1% | 100.0% |
 
 ## Paired comparisons
 
@@ -80,6 +83,8 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `retry_economist (prior)` vs `rules_only` | -8.51 [-17.02, -2.04] | yes | -0.0935 [-0.2258, +0.0152] | no |
 | `retry_economist (prior)` vs `naive_retry_3x` | +4.26 [-6.52, +16.28] | no | +0.0952 [-0.0690, +0.2718] | no |
 | `retry_economist (naive plan)` vs `naive_retry_3x` | -2.13 [-8.93, +4.55] | no | +0.0846 [-0.0407, +0.2186] | no |
+| `retry_economist (LLM plan)` vs `llm_router_only (NO ECONOMIST)` | -6.38 [-13.73, +0.00] | no | -0.0514 [-0.1801, +0.0604] | no |
+| `retry_economist (LLM plan)` vs `retry_economist (prior)` | -2.13 [-9.52, +4.55] | no | -0.0062 [-0.1404, +0.1248] | no |
 
 ## Breakdown by failure code
 
@@ -174,6 +179,19 @@ Difference between two policies, bootstrapped over the SAME resampled customers 
 | `ACS_TIMEOUT` | 2 | 0.0% | n/a | n/a | 0 | n/a | n/a | 0.0% | n/a | n/a | 50.0% | 50.0% | +0.0 | 68.9% | +0.0 | 0.01 | 0.01 | 50.0% | 0 | 0 | 1 | 0 | 0 | n/a | 0 | 2 |
 | `R05` | 2 | n/a | n/a | n/a | 0 | n/a | n/a | n/a | n/a | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 0 | 0 | 0 | 100.0% | 0 | 0 |
 
+#### `retry_economist (LLM plan)` by failure code
+
+| failure code | n | precision | recall | F1 | addressable | capture | selection error | precision (INR-wt) | recall (INR-wt) | F1 (INR-wt) | recovery | organic | uplift pp | recovery (INR-wt) | uplift pp (INR-wt) | median days | mean days | recovered <=72h | incr | cannib | hopeless | wrong action | missed | restraint precision | net INR | attempts |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `51` | 14 | 40.0% | 66.7% | 50.0% | 7 | 57.1% | 20.0% | 93.4% | 99.6% | 96.4% | 64.3% | 35.7% | +28.6 | 94.2% | +92.2 | 3.74 | 6.69 | 21.4% | 4 | 0 | 2 | 1 | 2 | 50.0% | 81,668 | 10 |
+| `91` | 13 | 36.4% | 100.0% | 53.3% | 5 | 80.0% | 20.0% | 13.0% | 100.0% | 23.0% | 53.8% | 23.1% | +30.8 | 47.6% | +12.9 | 0.10 | 0.38 | 53.8% | 4 | 0 | 4 | 1 | 0 | 100.0% | 5,878 | 11 |
+| `41` | 7 | 0.0% | 0.0% | n/a | 2 | 0.0% | n/a | 0.0% | 0.0% | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 1 | 0 | 2 | 66.7% | 0 | 0 |
+| `MANDATE_EXPIRED_M06` | 4 | n/a | 0.0% | n/a | 3 | 0.0% | n/a | n/a | 0.0% | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 0 | 0 | 3 | 25.0% | 0 | 0 |
+| `U69` | 3 | 50.0% | 100.0% | 66.7% | 1 | 100.0% | 0.0% | 24.3% | 100.0% | 39.1% | 66.7% | 33.3% | +33.3 | 36.0% | +20.6 | 0.98 | 0.98 | 66.7% | 1 | 0 | 1 | 0 | 0 | 100.0% | 399 | 2 |
+| `96` | 2 | 0.0% | n/a | n/a | 0 | n/a | n/a | 0.0% | n/a | n/a | 50.0% | 50.0% | +0.0 | 74.3% | +0.0 | 0.09 | 0.09 | 50.0% | 0 | 0 | 0 | 0 | 0 | 100.0% | 0 | 1 |
+| `ACS_TIMEOUT` | 2 | 0.0% | n/a | n/a | 0 | n/a | n/a | 0.0% | n/a | n/a | 50.0% | 50.0% | +0.0 | 68.9% | +0.0 | 0.01 | 0.01 | 50.0% | 0 | 0 | 0 | 0 | 0 | 100.0% | 0 | 1 |
+| `R05` | 2 | n/a | n/a | n/a | 0 | n/a | n/a | n/a | n/a | n/a | 0.0% | 0.0% | +0.0 | 0.0% | +0.0 | n/a (0 recovered) | n/a (0 recovered) | 0.0% | 0 | 0 | 0 | 0 | 0 | 100.0% | 0 | 0 |
+
 ## Router and provider
 
 - provider: `gemini:gemini-3.5-flash-lite (SUBSAMPLE - cache replay only, no network)`
@@ -247,8 +265,8 @@ The SUBSAMPLE is exactly the holdout transactions with a real cached `gemini-3.5
 | `41` | 7 | 14.9% | 57 | 7.6% | +7.3 |
 | `96` | 2 | 4.3% | 56 | 7.5% | -3.2 |
 | `R05` | 2 | 4.3% | 41 | 5.5% | -1.2 |
-| `MANDATE_EXPIRED_M06` | 4 | 8.5% | 36 | 4.8% | +3.7 |
 | `U69` | 3 | 6.4% | 36 | 4.8% | +1.6 |
+| `MANDATE_EXPIRED_M06` | 4 | 8.5% | 36 | 4.8% | +3.7 |
 | `ACS_TIMEOUT` | 2 | 4.3% | 34 | 4.5% | -0.3 |
 
 ## Diagnostic 1 - action distribution: model vs `rules_only` vs `oracle_best`
@@ -300,4 +318,33 @@ TRUE organic rate is `would_pay_anyway` measured directly from the oracle on thi
 
 > `p_recover_if_act` (n=34): router (real model) Brier 0.2780 vs constant base-rate Brier 0.2962 vs train-only historical-prior Brier 0.2449 - **NO, the real model does NOT beat the prior**.
 > `p_recover_if_abstain` (n=47): router (real model) Brier 0.2026 vs constant base-rate Brier 0.1793 vs train-only historical-prior Brier 0.1587 - **NO, the real model does NOT beat the prior**.
+
+## Diagnostic 6 - the full architecture, end to end: `retry_economist (LLM plan)`
+
+The router's real, cached plan (all 47 SUBSAMPLE transactions), priced and vetted by the same economist and train-only historical prior `retry_economist (prior)` uses. Its own probabilities are never read - Phase 4 found they lose to this same prior.
+
+> **What did the economist add to the LLM?** `retry_economist (LLM plan)` vs `llm_router_only (NO ECONOMIST)`: net uplift -6.38 pp [-13.73, +0.00] - STRADDLES ZERO - UNDERPOWERED at n=47, not a claim either way
+> **What did the LLM add to the economist?** `retry_economist (LLM plan)` vs `retry_economist (prior)`: net uplift -2.13 pp [-9.52, +4.55] - STRADDLES ZERO - UNDERPOWERED at n=47, not a claim either way
+
+Both comparisons are expected to be underpowered at n=47; the point of this policy existing is that the end-to-end configuration was built and measured at all, not that either comparison shows a winner here.
+
+### Verdict counts
+
+`approve`: 26 | `approve_truncated`: **0** | `veto`: 21 (of 47 decisions)
+
+> `approve_truncated` did not fire on this subsample either - even a mixed-action plan needs a compliance rule to remove PART of it, and at n=47 that combination did not occur.
+
+### Compliance rule firing counts
+
+(of 47 economist decisions - 34 had a non-empty router proposal for compliance to check; the other 13 were router abstentions, auto-vetoed with nothing for any rule to remove)
+
+| rule | fired on n transactions |
+| --- | ---: |
+| `C1_RISK_DECLINED` | 0 |
+| `C2_HARD_DECLINE_NO_DEBIT` | 0 |
+| `C3_ATTEMPT_CAP` | 0 |
+| `C4_EXPIRED_MANDATE` | 0 |
+| `C5_CONTACT_CAP` | 1 |
+
+> **`C1`/`C2` did not fire on this subsample - a real, checked finding, not the expected one.** The prompt gives the model no rule against proposing a debit retry on a hard or risk decline, unlike `rules_only`'s hardcoded logic. But of the 9 hard-or-risk-decline transactions in this subsample, the real model proposed an empty plan on 8 of them (citing the hard-decline signal by name in its rationale) and proposed only `request_new_mandate` - which C2 exempts, since it collects consent rather than putting another debit on the wire - on 1 more. So these two compliance rules had nothing left to remove on this subsample - not because the plan source is rule-bound the way `rules_only` is, but because the model reached the same conclusion on its own here. Whether that holds at scale is exactly what the full 749-transaction run would tell and this subsample cannot.
 

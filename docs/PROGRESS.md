@@ -13,7 +13,7 @@ claim is measured against three baselines rather than asserted.
 | 2 — Evaluation harness (the scoreboard) | ✅ COMPLETE |
 | 3 — Three baselines | ✅ COMPLETE |
 | 4 — Three-signal router | ✅ COMPLETE (SUBSAMPLE, n=47) — real `gemini-3.5-flash-lite`, not the full 749-transaction holdout; background run never finished, see note below |
-| 5 — Economist layer (approve / veto) | ✅ COMPLETE against the historical-prior estimator, two plan sources (no LLM). LLM-priced pairing (router's plan + economist) remains open - not attempted on the subsample either, see Phase 5's "What's still open". |
+| 5 — Economist layer (approve / veto) | ✅ COMPLETE, including the full architecture end to end (`retry_economist (LLM plan)`) - scored on Phase 4's SUBSAMPLE (n=47), not the full holdout; see "The full architecture, end to end" below. |
 | 6 — Bounded execution + audit trail | ⬜ NOT STARTED |
 | 7 — Demo, README, architecture diagram | ⬜ NOT STARTED |
 
@@ -383,7 +383,7 @@ Ten-bin reliability tables for both estimates are in
 `python scripts/subsample_scoreboard.py` — no API key needed for anyone
 re-running this exact result.
 
-## ✅ Phase 5 — COMPLETE (against the historical prior; LLM-priced pairing open)
+## ✅ Phase 5 — COMPLETE (historical-prior pairings on the full holdout; the LLM-priced pairing below is scored on Phase 4's SUBSAMPLE, n=47, not the full holdout)
 
 Built in `src/retry_economist/economist/`: `EVTerms` (every term of the formula
 itemised), five hard compliance rules (`C1`-`C5`, each able only to REMOVE an
@@ -629,16 +629,98 @@ plan before any EV arithmetic runs, positive or not - is the same property
 `tests/test_economist.py::test_c1_vetoes_a_risk_decline_at_any_expected_value`
 asserts.
 
+### The full architecture, end to end — `retry_economist (LLM plan)`
+
+The one gap this project had left: the router proposing and the economist
+approving/vetoing had each been measured, but never together, on real
+transactions. `src/retry_economist/policies/retry_economist_llm_plan.py` closes
+it - and it is thin, exactly as the shared `EconomistOverPlan` base was built
+to allow. The router's real, cached plan for each of Phase 4's 47 SUBSAMPLE
+transactions is priced by the SAME `HistoricalPriorEstimator` and the SAME
+`Economist` that `retry_economist (prior)` and `retry_economist (naive plan)`
+already use - the router's own `p_recover_if_act` / `p_recover_if_abstain` are
+never read, because Phase 4 found they lose to this prior on both estimates.
+Zero API calls: it runs entirely off the 47 cached real proposals, through a
+second `Router` instance pointed at the same on-disk cache with a
+network-disabled provider, so a coding mistake anywhere in this path would
+raise loudly rather than place a live call.
+
+Full table, calibration and diagnostics in `results/subsample_scoreboard.md`
+("Diagnostic 6"), produced by `python scripts/subsample_scoreboard.py`
+(offline, no key needed). The result on the SUBSAMPLE (n=47, 41 customers):
+
+| policy | recovery | uplift pp | acted | attempts | decision precision | decision F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `retry_economist (prior)` | 44.7% | +21.3 | 30 | 30 | 33.3% | 43.5% |
+| `llm_router_only (NO ECONOMIST)` | 48.9% | +25.5 | 34 | 29 | 35.3% | 48.0% |
+| `retry_economist (LLM plan)` | 42.6% | +19.1 | 26 | 25 | 34.6% | 42.9% |
+
+**Paired CIs, both directions, both underpowered - reported as such:**
+
+- **What did the economist add to the LLM?** `retry_economist (LLM plan)` vs
+  `llm_router_only`: **−6.38 pp [−13.73, +0.00]** - straddles zero (the
+  interval's upper edge lands exactly on zero). At n=47 this cannot
+  distinguish "the economist's vetoes cost real recovery here" from "no
+  measurable difference at this sample size" - both are consistent with the
+  data.
+- **What did the LLM add to the economist?** `retry_economist (LLM plan)` vs
+  `retry_economist (prior)`: **−2.13 pp [−9.52, +4.55]** - straddles zero,
+  more comfortably. Same caveat: not enough data to say the LLM-sourced plan
+  is worse than `rules_only`'s plan once both are priced by the same
+  economist, only that this particular 47-transaction slice does not resolve
+  it either way.
+
+Neither result is a win or a loss for the end-to-end configuration. The
+point of building it was that it now EXISTS and was measured on real
+transactions, which is what closes the gap - not that either comparison
+favours it at this n.
+
+**Verdict counts**: 26 `approve`, **0 `approve_truncated`**,  21 `veto` (of 47
+decisions). `approve_truncated` still did not fire, for the same structural
+reason it hasn't fired anywhere yet in this project: even though the router
+can propose ordered, mixed-action plans (unlike `naive_retry_3x`'s
+same-kind ladder), a rule still needs a plan where PART of it should be
+removed and part should survive, and at n=47 that combination did not occur.
+
+**Compliance rule firing counts** (of 47 decisions; 34 had a non-empty router
+proposal, the other 13 were router abstentions with nothing for any rule to
+check):
+
+| rule | fired on n transactions |
+| --- | ---: |
+| `C1_RISK_DECLINED` | 0 |
+| `C2_HARD_DECLINE_NO_DEBIT` | 0 |
+| `C3_ATTEMPT_CAP` | 0 |
+| `C4_EXPIRED_MANDATE` | 0 |
+| `C5_CONTACT_CAP` | 1 |
+
+**A real finding, not the expected one.** The working assumption going in was
+that C1/C2 would finally get real ammunition here, since nothing in the
+router's prompt forbids proposing a debit retry on a hard or risk decline the
+way `rules_only`'s hardcoded logic does. Checked directly against the 9
+hard-or-risk-decline transactions in this subsample: the model proposed an
+empty plan on 8 of them, citing the hard-decline signal by name in its own
+rationale (e.g. *"hard declines ... can never be cleared by retrying"*), and
+proposed only `request_new_mandate` - which C2 exempts, since it collects
+consent rather than putting another debit on the wire - on the ninth. So C1
+and C2 had nothing to remove on this subsample: not because the plan source
+is rule-bound the way `rules_only` is, but because the real model
+independently reasoned its way to the same restraint on every one of these 9
+cases. This is a genuine property of the 47 cached responses, checked rather
+than assumed, and it is exactly the kind of thing a larger sample could
+still overturn - a model correct on 9 cases is not a model verified safe on
+all of them.
+
 ### What's still open
 
-- **The LLM-priced pairing (router's plan, either estimator) has not been
-  built.** Phase 4 closed on a labelled 47-transaction subsample (see that
-  section), and this pairing was not attempted even on that subsample -
-  it needs a third plan source wired into `EconomistOverPlan`, not touching
-  the economist itself, and was out of scope for the subsample close-out.
-  Doing it on n=47 would also inherit that subsample's skew (see Phase 4's
-  representativeness table), so it is better done once more real cache
-  coverage exists.
+- **The full architecture is now scored, but only on Phase 4's 47-transaction
+  subsample.** Both paired comparisons above straddle zero, and the
+  compliance-rule finding (C1/C2 never firing) is checked on 9 hard-or-risk
+  transactions - real, but not enough to generalise. Re-running
+  `retry_economist (LLM plan)` once more of the full 749-transaction holdout
+  is cached would both tighten these intervals and test whether the model's
+  restraint on hard/risk declines holds outside this subsample's skew (see
+  Phase 4's representativeness table).
 
 ## ⬜ Phase 6 — Bounded execution + audit trail
 
@@ -657,7 +739,7 @@ python -m retry_economist.eval.cli --split holdout \
 python -m retry_economist.eval.cli --split holdout \
     --policies "do_nothing,naive_retry_3x,rules_only,retry_economist (prior),oracle_best" \
     --clv-sweep --discount-sweep
-python scripts/subsample_scoreboard.py   # Phase 4 close-out: real model, n=47, offline, no key needed
+python scripts/subsample_scoreboard.py   # Phase 4 + 5 end-to-end close-out: real model, n=47, offline, no key needed
 python -m pytest tests -q
 ```
 
