@@ -66,6 +66,12 @@ tbody tr:last-child td { border-bottom: 0; }
 .ci { color: var(--dim); font-weight: 400; font-size: 0.9em; }
 .yes { color: var(--good); font-weight: 700; }
 .no { color: var(--warn); font-weight: 700; }
+.verdictcell { text-align: left; }
+.sig { color: var(--dim); font-weight: 600; }
+.nosig { color: var(--dim); font-weight: 600; }
+.less { color: var(--accent); font-weight: 800; letter-spacing: 0.04em; }
+.more { color: var(--good); font-weight: 800; letter-spacing: 0.04em; }
+.trade { font-size: 19px; margin: 16px 0 0; padding: 16px 20px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; }
 
 .bigdelta { display: flex; align-items: center; gap: 26px; margin: 22px 0 4px; flex-wrap: wrap; }
 .bd-from { font-size: 92px; font-weight: 800; line-height: 1; color: var(--accent); }
@@ -252,7 +258,7 @@ ul.limits li { margin-bottom: 16px; }
   <h3>Paired comparisons &mdash; same customers resampled in both arms</h3>
   <div class="scroll">
     <table>
-      <thead><tr><th>comparison</th><th>&Delta; uplift pp (95% CI)</th><th>&Delta; decision F1 (95% CI)</th><th>verdict</th></tr></thead>
+      <thead><tr><th>comparison</th><th>&Delta; uplift pp (95% CI)</th><th>&Delta; decision F1 (95% CI)</th><th>uplift verdict</th></tr></thead>
       <tbody>
       <tr>
         <td class="name">rules_only <span class="vs">vs</span> naive_retry_3x</td>
@@ -262,7 +268,7 @@ ul.limits li { margin-bottom: 16px; }
         <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.point">+0.110</span>
             <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.low">+0.067</span>,
             <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.high">+0.154</span>]</span></td>
-        <td class="yes">supported</td>
+        <td class="verdictcell"><span class="sig">significant:</span> rules_only recovers <span class="more">MORE</span></td>
       </tr>
       <tr>
         <td class="name">rules_only <span class="vs">vs</span> do_nothing</td>
@@ -272,7 +278,7 @@ ul.limits li { margin-bottom: 16px; }
         <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.point">+0.452</span>
             <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.low">+0.414</span>,
             <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.high">+0.492</span>]</span></td>
-        <td class="yes">supported</td>
+        <td class="verdictcell"><span class="sig">significant:</span> rules_only recovers <span class="more">MORE</span></td>
       </tr>
       <tr>
         <td class="name">retry_economist (prior) <span class="vs">vs</span> rules_only</td>
@@ -282,7 +288,7 @@ ul.limits li { margin-bottom: 16px; }
         <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.point">-0.004</span>
             <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.low">-0.022</span>,
             <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.high">+0.015</span>]</span></td>
-        <td class="yes">supported</td>
+        <td class="verdictcell"><span class="sig">significant:</span> retry_economist (prior) recovers <span class="less">LESS</span></td>
       </tr>
       <tr>
         <td class="name">retry_economist (prior) <span class="vs">vs</span> naive_retry_3x</td>
@@ -292,7 +298,7 @@ ul.limits li { margin-bottom: 16px; }
         <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.point">+0.106</span>
             <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.low">+0.062</span>,
             <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.high">+0.154</span>]</span></td>
-        <td class="yes">supported</td>
+        <td class="verdictcell"><span class="sig">significant:</span> retry_economist (prior) recovers <span class="more">MORE</span></td>
       </tr>
       <tr>
         <td class="name">retry_economist (naive plan) <span class="vs">vs</span> naive_retry_3x</td>
@@ -302,11 +308,12 @@ ul.limits li { margin-bottom: 16px; }
         <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.point">-0.037</span>
             <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.low">-0.075</span>,
             <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.high">+0.002</span>]</span></td>
-        <td class="yes">supported</td>
+        <td class="verdictcell"><span class="sig">significant:</span> retry_economist (naive plan) recovers <span class="less">LESS</span></td>
       </tr>
       </tbody>
     </table>
   </div>
+  <p class="trade"><strong>retry_economist (prior)</strong> recovers <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.point">2.5pp</span> <strong>less</strong> than <strong>rules_only</strong> &mdash; while using <span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.total_attempts">515</span> attempts vs <span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.total_attempts">568</span>, and spending INR <span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.total_cost_rupees + annoyance_cost_rupees">17,018</span> vs INR <span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.total_cost_rupees + annoyance_cost_rupees">30,813</span>.</p>
 </section>
 
 <section id="economist">

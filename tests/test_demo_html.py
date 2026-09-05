@@ -141,3 +141,84 @@ def test_the_limitations_section_names_the_subsample(built: str) -> None:
     assert "What this cannot do" in built
     assert str(subsample["n_transactions"]) in built
     assert "directional only" in built
+
+
+# ---------------------------------------------------------------------------
+# the paired-comparison verdict column
+# ---------------------------------------------------------------------------
+
+
+def _verdict():
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from build_demo_html import paired_verdict
+
+    return paired_verdict
+
+
+def test_verdict_states_direction_for_every_case() -> None:
+    """All three branches, including the one no current row exercises.
+
+    Every paired comparison in the committed data is currently significant, so
+    the "not significant" path would otherwise ship untested.
+    """
+    paired_verdict = _verdict()
+
+    loss = paired_verdict(
+        {"uplift_significant": True, "net_uplift_pp_delta": {"point": -2.54}, "subject": "A"}
+    )
+    win = paired_verdict(
+        {"uplift_significant": True, "net_uplift_pp_delta": {"point": 8.95}, "subject": "A"}
+    )
+    null = paired_verdict(
+        {"uplift_significant": False, "net_uplift_pp_delta": {"point": -2.54}, "subject": "A"}
+    )
+
+    assert "LESS" in loss and "MORE" not in loss
+    assert "MORE" in win and "LESS" not in win
+    assert "not significant" in null
+    assert "LESS" not in null and "MORE" not in null
+    # The word "supported" must not come back - it was the ambiguity.
+    for rendered in (loss, win, null):
+        assert "supported" not in rendered
+
+
+def test_the_page_never_labels_a_loss_as_a_win(built: str) -> None:
+    """A negative delta must carry LESS on the page, positive must carry MORE."""
+    board = json.loads(
+        (REPO_ROOT / "results" / "holdout_scoreboard.json").read_text(encoding="utf-8")
+    )
+    paired_verdict = _verdict()
+
+    for comparison in board["paired_comparisons"]:
+        rendered = paired_verdict(comparison)
+        assert rendered in built, f"verdict missing for {comparison['subject']}"
+        if comparison["uplift_significant"] and comparison["net_uplift_pp_delta"]["point"] < 0:
+            assert "LESS" in rendered, comparison["subject"]
+
+    # And the old ambiguous wording is gone from the whole page.
+    assert ">supported<" not in built
+    assert "straddles zero" not in built
+
+
+def test_the_trade_off_line_matches_the_scoreboard(built: str) -> None:
+    """The sentence under the table must be the table's own numbers."""
+    board = json.loads(
+        (REPO_ROOT / "results" / "holdout_scoreboard.json").read_text(encoding="utf-8")
+    )
+    by_name = {p["name"]: p["metrics"] for p in board["policies"]}
+    econ, rules = by_name["retry_economist (prior)"], by_name["rules_only"]
+    delta = next(
+        c
+        for c in board["paired_comparisons"]
+        if c["subject"] == "retry_economist (prior)" and c["baseline"] == "rules_only"
+    )["net_uplift_pp_delta"]["point"]
+
+    assert f"{abs(delta):.1f}pp" in built
+    assert f"{econ['total_attempts']:,}" in built
+    assert f"{rules['total_attempts']:,}" in built
+    for metrics in (econ, rules):
+        spend = metrics["total_cost_rupees"] + metrics["annoyance_cost_rupees"]
+        assert f"{spend:,.0f}" in built, f"spend {spend} missing"
+    # It must read as a loss, not a win.
+    assert "recovers <span class=\"num\"" in built or "recovers " in built
+    assert "<strong>less</strong> than" in built

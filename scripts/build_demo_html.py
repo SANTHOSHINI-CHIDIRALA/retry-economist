@@ -330,7 +330,10 @@ def section_scoreboard(board: dict[str, Any]) -> str:
         uplift = comparison["net_uplift_pp_delta"]
         f1 = comparison["decision_f1_delta"]
         path = f"paired_comparisons[{comparison['subject']} vs {comparison['baseline']}]"
-        supported = comparison["uplift_significant"]
+        # Direction has to be readable at a glance. "supported" beside a
+        # negative delta reads as a win to anyone skimming, and two of these
+        # rows ARE significant losses - the verdict says which way it went.
+        verdict = paired_verdict(comparison)
         pairs.append(
             f"""      <tr>
         <td class="name">{esc(comparison["subject"])} <span class="vs">vs</span> {esc(comparison["baseline"])}</td>
@@ -340,9 +343,11 @@ def section_scoreboard(board: dict[str, Any]) -> str:
         <td>{num(f1["point"], f"{f1['point']:+.3f}", source=src, path=f"{path}.decision_f1_delta.point")}
             <span class="ci">[{num(f1["low"], f"{f1['low']:+.3f}", source=src, path=f"{path}.decision_f1_delta.low")},
             {num(f1["high"], f"{f1['high']:+.3f}", source=src, path=f"{path}.decision_f1_delta.high")}]</span></td>
-        <td class="{'yes' if supported else 'no'}">{'supported' if supported else 'straddles zero'}</td>
+        <td class="verdictcell">{verdict}</td>
       </tr>"""
         )
+
+    trade = _trade_off_line(board, src)
 
     return f"""
 <section id="scoreboard">
@@ -365,14 +370,85 @@ def section_scoreboard(board: dict[str, Any]) -> str:
   <h3>Paired comparisons &mdash; same customers resampled in both arms</h3>
   <div class="scroll">
     <table>
-      <thead><tr><th>comparison</th><th>&Delta; uplift pp (95% CI)</th><th>&Delta; decision F1 (95% CI)</th><th>verdict</th></tr></thead>
+      <thead><tr><th>comparison</th><th>&Delta; uplift pp (95% CI)</th><th>&Delta; decision F1 (95% CI)</th><th>uplift verdict</th></tr></thead>
       <tbody>
 {chr(10).join(pairs)}
       </tbody>
     </table>
   </div>
+  <p class="trade">{trade}</p>
 </section>
 """
+
+
+def paired_verdict(comparison: dict[str, Any]) -> str:
+    """Render one paired comparison's verdict with its DIRECTION spelled out.
+
+    "supported" beside a negative delta reads as a win to anyone skimming, and
+    two of these rows are significant LOSSES on recovery. On a phone, in a
+    screen recording, a viewer sees the verdict column before they parse the
+    sign of the delta - so the direction is stated in words, not left to be
+    inferred from a minus sign.
+    """
+    if not comparison["uplift_significant"]:
+        return '<span class="nosig">not significant</span>'
+    direction = "less" if comparison["net_uplift_pp_delta"]["point"] < 0 else "more"
+    word = "LESS" if direction == "less" else "MORE"
+    return (
+        f'<span class="sig">significant:</span> {esc(comparison["subject"])} '
+        f'recovers <span class="{direction}">{word}</span>'
+    )
+
+
+def _trade_off_line(board: dict[str, Any], src: str) -> str:
+    """Spell out the one comparison a viewer is most likely to misread.
+
+    `retry_economist (prior)` loses to `rules_only` on recovery, significantly,
+    and buys spend efficiency with it. Both halves of that trade come from the
+    scoreboard, so the sentence cannot drift from the table above it.
+    """
+    econ = policy(board, "retry_economist (prior)")["metrics"]
+    rules = policy(board, "rules_only")["metrics"]
+    delta = next(
+        c
+        for c in board["paired_comparisons"]
+        if c["subject"] == "retry_economist (prior)" and c["baseline"] == "rules_only"
+    )["net_uplift_pp_delta"]["point"]
+    econ_spend = econ["total_cost_rupees"] + econ["annoyance_cost_rupees"]
+    rules_spend = rules["total_cost_rupees"] + rules["annoyance_cost_rupees"]
+    ppath = "paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.point"
+
+    return (
+        "<strong>retry_economist (prior)</strong> recovers "
+        + num(abs(delta), f"{abs(delta):.1f}pp", source=src, path=ppath)
+        + " <strong>less</strong> than <strong>rules_only</strong> &mdash; while using "
+        + num(
+            econ["total_attempts"],
+            f"{econ['total_attempts']:,}",
+            source=src,
+            path="policies[retry_economist (prior)].metrics.total_attempts",
+        )
+        + " attempts vs "
+        + num(
+            rules["total_attempts"],
+            f"{rules['total_attempts']:,}",
+            source=src,
+            path="policies[rules_only].metrics.total_attempts",
+        )
+        + ", and spending INR "
+        + money(
+            econ_spend,
+            source=src,
+            path="policies[retry_economist (prior)].metrics.total_cost_rupees + annoyance_cost_rupees",
+        )
+        + " vs INR "
+        + money(
+            rules_spend,
+            source=src,
+            path="policies[rules_only].metrics.total_cost_rupees + annoyance_cost_rupees",
+        )
+        + "."
+    )
 
 
 def section_economist(veto_text: str) -> str:
@@ -642,6 +718,12 @@ tbody tr:last-child td { border-bottom: 0; }
 .ci { color: var(--dim); font-weight: 400; font-size: 0.9em; }
 .yes { color: var(--good); font-weight: 700; }
 .no { color: var(--warn); font-weight: 700; }
+.verdictcell { text-align: left; }
+.sig { color: var(--dim); font-weight: 600; }
+.nosig { color: var(--dim); font-weight: 600; }
+.less { color: var(--accent); font-weight: 800; letter-spacing: 0.04em; }
+.more { color: var(--good); font-weight: 800; letter-spacing: 0.04em; }
+.trade { font-size: 19px; margin: 16px 0 0; padding: 16px 20px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; }
 
 .bigdelta { display: flex; align-items: center; gap: 26px; margin: 22px 0 4px; flex-wrap: wrap; }
 .bd-from { font-size: 92px; font-weight: 800; line-height: 1; color: var(--accent); }

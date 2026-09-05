@@ -1,5 +1,5 @@
 {
-  "count": 91,
+  "count": 96,
   "entries": [
     {
       "path": "n_transactions",
@@ -479,6 +479,36 @@
       "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.high",
       "raw": 0.002003,
       "rendered": "+0.002",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.point",
+      "raw": 2.536716,
+      "rendered": "2.5pp",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.total_attempts",
+      "raw": 515,
+      "rendered": "515",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.total_attempts",
+      "raw": 568,
+      "rendered": "568",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 17017.6,
+      "rendered": "17,018",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 30812.6,
+      "rendered": "30,813",
       "source": "results/holdout_scoreboard.json"
     },
     {
