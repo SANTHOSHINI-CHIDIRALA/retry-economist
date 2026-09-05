@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retry Economist</title>
+<style>
+:root {
+  --bg: #fbfaf7;
+  --panel: #ffffff;
+  --ink: #16130f;
+  --dim: #6b6459;
+  --line: #ded7cb;
+  --accent: #b0341d;
+  --good: #1f6b3a;
+  --warn: #8a5a00;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 19px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px 120px; }
+section { padding: 54px 0 46px; border-top: 3px solid var(--line); }
+section:first-of-type { border-top: 0; padding-top: 44px; }
+h1.headline { font-size: 46px; line-height: 1.18; margin: 8px 0 30px; letter-spacing: -0.02em; }
+h2 { font-size: 34px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.015em; }
+h3 { font-size: 23px; margin: 38px 0 10px; color: var(--dim); font-weight: 600; }
+.kicker { text-transform: uppercase; letter-spacing: 0.14em; font-size: 14px; color: var(--accent); font-weight: 700; margin: 0; }
+.lead { font-size: 20px; color: var(--dim); margin: 6px 0 26px; }
+.lead.warn { color: var(--accent); font-weight: 600; }
+.punch { font-size: 21px; margin: 26px 0 0; padding: 18px 22px; background: var(--panel); border-left: 6px solid var(--accent); }
+.note { font-size: 16px; color: var(--dim); margin: 18px 0 0; }
+.dim { color: var(--dim); }
+.mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
+.strong { font-weight: 700; }
+.num { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 34px; }
+.fact { display: flex; flex-direction: column; }
+.fact-n { font-size: 34px; font-weight: 700; line-height: 1.1; }
+.fact-l { font-size: 15px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.07em; }
+
+.cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.card { flex: 1 1 260px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 20px 22px; }
+.card-n { font-size: 44px; font-weight: 700; line-height: 1; }
+.card-p { font-size: 19px; color: var(--accent); font-weight: 700; margin-top: 2px; }
+.card-l { font-size: 19px; font-weight: 600; margin-top: 12px; }
+.card-s { font-size: 16px; color: var(--dim); }
+
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 2px solid var(--line); border-radius: 10px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; white-space: nowrap; }
+th, td { padding: 13px 16px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+th { font-size: 15px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); text-align: right; font-weight: 700; }
+th:first-child, td:first-child, td.name, td.rule { text-align: left; }
+td.name { font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+.bound-body { background: #f3efe6; }
+.bound-body td { border-top: 3px solid var(--line); }
+.tag { display: inline-block; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-left: 8px; font-weight: 700; white-space: nowrap; }
+.tag-cheat { background: var(--accent); color: #fff; }
+.vs { color: var(--dim); font-weight: 400; }
+.ci { color: var(--dim); font-weight: 400; font-size: 0.9em; }
+.yes { color: var(--good); font-weight: 700; }
+.no { color: var(--warn); font-weight: 700; }
+
+.bigdelta { display: flex; align-items: center; gap: 26px; margin: 22px 0 4px; flex-wrap: wrap; }
+.bd-from { font-size: 92px; font-weight: 800; line-height: 1; color: var(--accent); }
+.bd-arrow { font-size: 54px; color: var(--dim); }
+.bd-to { font-size: 92px; font-weight: 800; line-height: 1; color: var(--good); }
+.bd-label { font-size: 20px; color: var(--dim); margin: 0 0 8px; }
+
+.split { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; }
+.split-half { flex: 1 1 300px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 22px; }
+.split-half.good { border-color: var(--good); }
+.split-half.weak { border-color: var(--warn); }
+.split-n { font-size: 52px; font-weight: 800; line-height: 1; }
+.split-half.good .split-n { color: var(--good); }
+.split-half.weak .split-n { color: var(--warn); }
+.split-l { font-size: 19px; font-weight: 600; margin-top: 8px; }
+.split-s { font-size: 16px; color: var(--dim); margin-top: 4px; }
+
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; margin: 20px 0; }
+.pbox { background: var(--panel); border: 2px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; min-width: 132px; }
+.pbox-proposal { border-color: var(--accent); border-style: dashed; }
+.pbox-compliance { border-color: var(--accent); border-width: 3px; }
+.pbox-decision { border-color: var(--good); border-width: 3px; }
+.pt { font-weight: 700; font-size: 17px; }
+.ps { font-size: 14px; color: var(--dim); }
+.parrow { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--dim); font-size: 26px; min-width: 84px; }
+.pedge { font-size: 13px; line-height: 1.35; text-align: center; color: var(--accent); font-weight: 700; }
+.oracle-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.obox { background: #f3efe6; border: 2px dashed var(--dim); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; font-weight: 700; min-width: 150px; }
+.obox-scorer { background: var(--panel); border-style: solid; }
+
+.txncard { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 18px 22px; margin-bottom: 18px; }
+.txnline { display: flex; flex-wrap: wrap; gap: 12px; padding: 6px 0; }
+.txnline .k { min-width: 150px; color: var(--dim); font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+.txnline .v { font-weight: 600; }
+table.checks td { white-space: normal; }
+tr.fired { background: #fdece8; }
+tr.fired td.rule { color: var(--accent); font-weight: 800; }
+
+.verdict { margin-top: 20px; padding: 20px 24px; border-radius: 10px; }
+.veto-verdict { background: var(--accent); color: #fff; }
+.approve-verdict { background: var(--good); color: #fff; }
+.verdict-word { font-size: 38px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1; }
+.verdict-reason { font-size: 17px; margin-top: 6px; opacity: 0.94; }
+
+.signalbox { background: var(--panel); border: 2px solid var(--line); border-left: 6px solid var(--accent); border-radius: 8px; padding: 18px 22px; }
+.siglabel { font-size: 14px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); font-weight: 700; }
+.sigtext { font-size: 19px; margin-top: 6px; }
+.sigmeta { font-size: 16px; color: var(--dim); margin-top: 8px; }
+.planline { margin: 20px 0 6px; font-size: 19px; }
+blockquote { margin: 12px 0 0; padding: 20px 24px; background: var(--panel); border: 2px solid var(--line); border-radius: 10px; font-size: 20px; line-height: 1.6; font-style: italic; }
+
+ul.limits { padding-left: 24px; margin: 10px 0 0; }
+ul.limits li { margin-bottom: 16px; }
+
+@media (max-width: 720px) {
+  body { font-size: 18px; }
+  h1.headline { font-size: 34px; }
+  h2 { font-size: 28px; }
+  .bd-from, .bd-to { font-size: 66px; }
+  .split-n { font-size: 42px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="headline">
+  <p class="kicker">Retry Economist &mdash; failed-payment recovery, scored</p>
+  <h1 class="headline">Recovered 47.9% vs 39.0% for naive_retry_3x, using 60% fewer retry attempts.</h1>
+  <div class="facts">
+    <div class="fact"><span class="fact-n"><span class="num" data-src="results/holdout_scoreboard.json#n_transactions">749</span></span><span class="fact-l">held-out transactions</span></div>
+    <div class="fact"><span class="fact-n"><span class="num" data-src="results/holdout_scoreboard.json#n_customers">240</span></span><span class="fact-l">customer clusters</span></div>
+    <div class="fact"><span class="fact-n"><span class="num" data-src="results/holdout_scoreboard.json#seed">42</span></span><span class="fact-l">seed &mdash; deterministic</span></div>
+  </div>
+</section>
+
+<section id="framing">
+  <h2>The framing</h2>
+  <p class="lead">Every failed payment is one of three things. Nothing in the raw feed tells you which.</p>
+  <div class="cards">
+    
+      <div class="card">
+        <div class="card-n"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.correct_restraint.count">175</span></div>
+        <div class="card-p"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.correct_restraint.count / 749">23.4%</span> of 749</div>
+        <div class="card-l">would have paid unaided</div>
+        <div class="card-s">acting here can only cost money</div>
+      </div>
+    
+      <div class="card">
+        <div class="card-n"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.correct_walkaway.count">289</span></div>
+        <div class="card-p"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.correct_walkaway.count / 749">38.6%</span> of 749</div>
+        <div class="card-l">unrecoverable by any affordable action</div>
+        <div class="card-s">acting here is pure loss</div>
+      </div>
+    
+      <div class="card">
+        <div class="card-n"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.missed_opportunity.count">285</span></div>
+        <div class="card-p"><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.abstained_buckets.missed_opportunity.count / 749">38.1%</span> of 749</div>
+        <div class="card-l">addressable</div>
+        <div class="card-s">the only bucket worth spending on</div>
+      </div>
+  </div>
+  <p class="punch">Fixed-schedule retry acts on
+    <span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.n_acted">702</span>
+    of 749 &mdash;
+    <span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.n_acted / 749">93.7%</span>
+    &mdash; without distinguishing between them.</p>
+</section>
+
+<section id="scoreboard">
+  <h2>The scoreboard</h2>
+  <p class="lead">Full holdout, 749 transactions. Every policy compliant &mdash; zero attempt-cap violations.</p>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>policy</th><th>recovery</th><th>uplift pp</th><th>precision</th>
+        <th>F1</th><th>attempts</th><th>spend INR</th><th>INR per INR</th>
+      </tr></thead>
+      <tbody>
+      <tr class="">
+        <td class="name">do_nothing</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.recovery_rate">23.4%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.net_uplift_pp">+0.0</span></td>
+        <td><span class="dim">n/a</span></td>
+        <td><span class="dim">n/a</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.total_attempts">0</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[do_nothing].metrics.total_cost_rupees + annoyance_cost_rupees">0</span></td>
+        <td><span class="dim">n/a</span></td>
+      </tr>
+      <tr class="">
+        <td class="name">naive_retry_3x</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.recovery_rate">39.0%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.net_uplift_pp">+15.6</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.decision_quality.precision">20.8%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.decision_quality.f1">34.2%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.total_attempts">1,430</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.total_cost_rupees + annoyance_cost_rupees">41,010</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[naive_retry_3x].metrics.cost_per_incremental_rupee">0.117</span></td>
+      </tr>
+      <tr class="">
+        <td class="name">rules_only</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.recovery_rate">47.9%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.net_uplift_pp">+24.6</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.decision_quality.precision">31.0%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.decision_quality.f1">45.2%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.total_attempts">568</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.total_cost_rupees + annoyance_cost_rupees">30,813</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[rules_only].metrics.cost_per_incremental_rupee">0.043</span></td>
+      </tr>
+      <tr class="">
+        <td class="name">retry_economist (naive plan)</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.recovery_rate">33.0%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.net_uplift_pp">+9.6</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.decision_quality.precision">28.2%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.decision_quality.f1">30.6%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.total_attempts">513</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.total_cost_rupees + annoyance_cost_rupees">14,917</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (naive plan)].metrics.cost_per_incremental_rupee">0.044</span></td>
+      </tr>
+      <tr class="">
+        <td class="name">retry_economist (prior)</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.recovery_rate">45.4%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.net_uplift_pp">+22.0</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.decision_quality.precision">32.4%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.decision_quality.f1">44.9%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.total_attempts">515</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.total_cost_rupees + annoyance_cost_rupees">17,018</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[retry_economist (prior)].metrics.cost_per_incremental_rupee">0.024</span></td>
+      </tr>
+      </tbody>
+      <tbody class="bound-body">
+      <tr class="bound">
+        <td class="name">oracle_best (CHEATS) <span class="tag tag-cheat">CHEATS &mdash; upper bound, not a result</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.recovery_rate">61.4%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.net_uplift_pp">+38.1</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.decision_quality.precision">100.0%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.decision_quality.f1">100.0%</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.total_attempts">240</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.total_cost_rupees + annoyance_cost_rupees">16,612</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#policies[oracle_best (CHEATS)].metrics.cost_per_incremental_rupee">0.017</span></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Paired comparisons &mdash; same customers resampled in both arms</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>comparison</th><th>&Delta; uplift pp (95% CI)</th><th>&Delta; decision F1 (95% CI)</th><th>verdict</th></tr></thead>
+      <tbody>
+      <tr>
+        <td class="name">rules_only <span class="vs">vs</span> naive_retry_3x</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.point">+8.9</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.low">+5.7</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.high">+12.5</span>]</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.point">+0.110</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.low">+0.067</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.high">+0.154</span>]</span></td>
+        <td class="yes">supported</td>
+      </tr>
+      <tr>
+        <td class="name">rules_only <span class="vs">vs</span> do_nothing</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.point">+24.6</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.low">+21.6</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.high">+27.7</span>]</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.point">+0.452</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.low">+0.414</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[rules_only vs do_nothing].decision_f1_delta.high">+0.492</span>]</span></td>
+        <td class="yes">supported</td>
+      </tr>
+      <tr>
+        <td class="name">retry_economist (prior) <span class="vs">vs</span> rules_only</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.point">-2.5</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.low">-3.6</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.high">-1.5</span>]</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.point">-0.004</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.low">-0.022</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.high">+0.015</span>]</span></td>
+        <td class="yes">supported</td>
+      </tr>
+      <tr>
+        <td class="name">retry_economist (prior) <span class="vs">vs</span> naive_retry_3x</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.point">+6.4</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.low">+3.3</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.high">+9.8</span>]</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.point">+0.106</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.low">+0.062</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.high">+0.154</span>]</span></td>
+        <td class="yes">supported</td>
+      </tr>
+      <tr>
+        <td class="name">retry_economist (naive plan) <span class="vs">vs</span> naive_retry_3x</td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.point">-6.0</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.low">-8.5</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.high">-3.7</span>]</span></td>
+        <td><span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.point">-0.037</span>
+            <span class="ci">[<span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.low">-0.075</span>,
+            <span class="num" data-src="results/holdout_scoreboard.json#paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.high">+0.002</span>]</span></td>
+        <td class="yes">supported</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="economist">
+  <h2>What the economist buys</h2>
+  <div class="bigdelta">
+    <div class="bd-from"><span class="num" data-src="results/veto_precision_naive_plan.md#hard_decline_retry_waste[naive_retry_3x]">245</span></div>
+    <div class="bd-arrow">&rarr;</div>
+    <div class="bd-to"><span class="num" data-src="results/veto_precision_naive_plan.md#hard_decline_retry_waste[retry_economist (naive plan)]">0</span></div>
+  </div>
+  <p class="bd-label">debit attempts burned on instruments the acquirer has already declared dead</p>
+  <p class="punch">The proposed ladder is <strong>identical</strong> in both rows &mdash; the same failure-code-blind three-attempt schedule, on the same transactions. The entire difference is the economist's compliance rules.</p>
+
+  <h3>Veto precision &mdash; of the actions removed, what share would have failed anyway</h3>
+  <div class="split">
+    <div class="split-half good">
+      <div class="split-n"><span class="num" data-src="results/veto_precision_naive_plan.md#veto precision / compliance-driven (C1-C5)">98.2%</span></div>
+      <div class="split-l">compliance-driven (C1&ndash;C5)</div>
+      <div class="split-s">hard rules. Nearly everything they remove was doomed.</div>
+    </div>
+    <div class="split-half weak">
+      <div class="split-n"><span class="num" data-src="results/veto_precision_naive_plan.md#veto precision / economics-driven (EV&lt;=0)">59.9%</span></div>
+      <div class="split-l">economics-driven (EV &le; 0)</div>
+      <div class="split-s">roughly 4 in 10 of these would actually have recovered. Knowingly left on the table.</div>
+    </div>
+  </div>
+  <p class="note">All vetoes combined: <span class="num" data-src="results/veto_precision_naive_plan.md#veto precision / all vetoes">71.4%</span>.</p>
+</section>
+
+<section id="pipeline">
+  <h2>The pipeline</h2>
+  <div class="flow">
+    <div class="pbox"><span class="pt">observed txn</span><span class="ps">22 fields</span></div><div class="parrow">&rarr;</div><div class="pbox"><span class="pt">three signals</span><span class="ps">deterministic</span></div><div class="parrow">&rarr;</div><div class="pbox"><span class="pt">LLM router</span><span class="ps">one call</span></div><div class="parrow">&rarr;<span class="pedge">proposes,<br>cannot execute</span></div><div class="pbox pbox-proposal"><span class="pt">Proposal</span><span class="ps">inert</span></div><div class="parrow">&rarr;</div><div class="pbox pbox-compliance"><span class="pt">compliance C1&ndash;C5</span><span class="ps">vetoes regardless of EV</span></div><div class="parrow">&rarr;</div><div class="pbox"><span class="pt">EV gate</span><span class="ps">prices it</span></div><div class="parrow">&rarr;</div><div class="pbox pbox-decision"><span class="pt">Decision</span><span class="ps">executable</span></div><div class="parrow">&rarr;</div><div class="pbox"><span class="pt">audit ledger</span><span class="ps">append-only</span></div>
+  </div>
+  <div class="oracle-row">
+    <div class="obox">oracle<span class="ps">counterfactual outcomes for all 9 actions</span></div>
+    <div class="parrow oarrow">&rarr;<span class="pedge">policies cannot<br>read this</span></div>
+    <div class="obox obox-scorer">scorer<span class="ps">the only thing that touches it</span></div>
+  </div>
+  <p class="note">An AST-based leakage guard walks <code>policies/</code>, <code>router/</code>, <code>llm/</code> and <code>economist/</code> in the test suite and fails the build on any route to the oracle.</p>
+</section>
+
+<section id="veto">
+  <h2>One real veto</h2>
+  <div class="txncard">
+    <div class="txnline"><span class="k">transaction</span><span class="v">pay_00647 &mdash; INR 60,000.00 &mdash; code R05</span></div>
+    <div class="txnline"><span class="k">gateway said</span><span class="v mono">R05 -- SUSPECTED FRAUD, BLOCKED</span></div>
+    <div class="txnline"><span class="k">proposed plan</span><span class="v mono">(&#x27;retry_now&#x27;, &#x27;retry_in_2h&#x27;)</span></div>
+  </div>
+  <div class="scroll">
+    <table class="checks">
+      <thead><tr><th>compliance rule</th><th></th><th>reason</th></tr></thead>
+      <tbody>
+      <tr class="fired"><td class="rule">C1_RISK_DECLINED</td><td class="yes">FIRED</td><td>risk-engine decline: every action is vetoed regardless of expected value</td></tr>
+      <tr class=""><td class="rule">C2_HARD_DECLINE_NO_DEBIT</td><td class="dim">no</td><td>hard decline, but the plan proposes no debit attempt</td></tr>
+      <tr class=""><td class="rule">C3_ATTEMPT_CAP</td><td class="dim">no</td><td>plan fits the 2 remaining attempt(s)</td></tr>
+      <tr class=""><td class="rule">C4_EXPIRED_MANDATE</td><td class="dim">no</td><td>mandate is not expired</td></tr>
+      <tr class=""><td class="rule">C5_CONTACT_CAP</td><td class="dim">no</td><td>4 contact(s) in the last 7 days, but the plan contacts nobody</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="verdict veto-verdict">
+    <div class="verdict-word">veto</div>
+    <div class="verdict-reason">C1_RISK_DECLINED: every proposed action was vetoed before any expected-value arithmetic ran</div>
+  </div>
+  <p class="note">The plan was emptied before any expected-value arithmetic ran. A risk decline is vetoed at <em>any</em> EV.</p>
+</section>
+
+<section id="proposal">
+  <h2>One real proposal</h2>
+  <p class="lead">Transaction pay_01921 &mdash; code 91 &mdash;
+     <span class="mono">NPCI - RB NOT AVAILABLE</span></p>
+  <div class="signalbox">
+    <div class="siglabel">issuer_health_now &mdash; computed, not guessed</div>
+    <div class="sigtext">SBIN shows 25.5x its baseline failure volume in the 6h window around this attempt (23 failures): clustered failures consistent with a live incident</div>
+    <div class="sigmeta"><span class="num" data-src="data/llm_cache#pay_01921 signals.issuer_health_now.multiple_over_baseline">25.47x</span> baseline
+      &middot; <span class="num" data-src="data/llm_cache#pay_01921 signals.issuer_health_now.failures_in_window">23</span> failures in window
+      &middot; confidence <span class="num" data-src="data/llm_cache#pay_01921 signals.issuer_health_now.confidence">0.9</span></div>
+  </div>
+  <div class="planline">proposed plan &nbsp;<span class="mono strong">retry_in_2h</span></div>
+  <blockquote>The root_cause signal confirms bank downtime with high confidence. Since this is a temporary technical outage at the issuer level, waiting for 2 hours allows the downtime to resolve before making another automated debit attempt.</blockquote>
+  <p class="note">Verbatim from the committed response cache &mdash; model <code>gemini-3.5-flash-lite</code>, replayed with zero network calls.</p>
+</section>
+
+<section id="priced">
+  <h2>The same transaction, priced twice</h2>
+  <p class="lead">pay_00861 &mdash; the model proposed the plan, and the model also estimated its own chance of success. Only one of those two numbers was allowed to decide.</p>
+  <div class="split">
+    <div class="split-half weak">
+      <div class="split-n"><span class="num" data-src="results/audit_ledger.jsonl#pay_00861 [LLM plan] proposal.p_recover_if_act">0.65</span></div>
+      <div class="split-l">the model's own estimate</div>
+      <div class="split-s">recorded in the ledger, then set aside</div>
+    </div>
+    <div class="split-half good">
+      <div class="split-n"><span class="num" data-src="results/audit_ledger.jsonl#pay_00861 [LLM plan] ev.p_recover_if_act">0.47</span></div>
+      <div class="split-l">the train-only historical prior</div>
+      <div class="split-s">what the expected value was actually computed from</div>
+    </div>
+  </div>
+  <div class="verdict approve-verdict">
+    <div class="verdict-word">approve</div>
+    <div class="verdict-reason">net expected value +7396.17 paise for [&#x27;retry_now&#x27;] under the historical_prior_train_only estimator</div>
+  </div>
+  <p class="punch">The prior is what decided. The model's estimate did not beat a per-code lookup on this data, so it is logged for audit and never priced with.</p>
+</section>
+
+<section id="limits">
+  <h2>What this cannot do</h2>
+  <p class="lead warn">The LLM rows in this project cover
+    <span class="num" data-src="results/subsample_scoreboard.json#n_transactions">47</span>
+    transactions, not 749. Every router comparison is directional only.</p>
+  <ul class="limits">
+    <li><strong>No execution against a live payment API.</strong> There is no HTTP client anywhere in this codebase and none is planned. Phase 6 gives a decision an audit trail; it does not give it a way to spend money. Wiring an authorised plan to a real gateway call is explicitly out of scope.</li>
+    <li><strong>Economics-driven vetoes are only 59.9% precise</strong> - roughly 4 in 10 actions the economist declines on expected-value grounds would, per the oracle, actually have recovered the payment. This system knowingly leaves real recoveries on the table in exchange for not spending on the other 6 in 10.</li>
+    <li><strong>Synthetic data, not real transactions.</strong> Every number above comes from a generated dataset (<code>generator/</code>) with a deterministic seed, not live payment traffic. The generator&#x27;s assumptions about failure-mode mix, issuer behaviour, and customer liquidity patterns are the ceiling on how far these numbers transfer.</li>
+    <li><strong>Single-decision episodes, not full sequential dunning.</strong> Every transaction gets one plan, decided once, executed in order until something recovers or the plan runs out - there is no re-pricing mid-sequence if new information arrives (a customer&#x27;s next unrelated failure, a changed issuer-health reading) the way a real multi-week dunning campaign would see.</li>
+    <li><strong>The oracle&#x27;s common-random-numbers assumption.</strong> All 9 possible actions&#x27; outcomes for a given transaction share one uniform draw, so <code>oracle_best</code>&#x27;s ceiling measures &quot;the best action available&quot;, not &quot;the luckiest draw&quot; - a deliberate design choice for a fair reference bound, but it also means the 9 actions&#x27; outcomes are more correlated than 9 independent real-world attempts would be.</li>
+    <li><strong>The historical prior is per-failure-code, with no within-code resolution.</strong> <code>HistoricalPriorEstimator</code> predicts the same probability for every transaction sharing a <code>(failure_code, action)</code> pair, regardless of amount, issuer, customer tenure, or anything else - it is a lookup table, not a per-transaction model, and it is what the economist prices with precisely because the LLM&#x27;s own per-transaction estimate did not beat it (see &quot;Honest findings&quot;).</li>
+  </ul>
+</section>
+</div>
+</body>
+</html>

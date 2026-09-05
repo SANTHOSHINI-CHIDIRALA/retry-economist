@@ -1,0 +1,552 @@
+{
+  "count": 91,
+  "entries": [
+    {
+      "path": "n_transactions",
+      "raw": 749,
+      "rendered": "749",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "n_customers",
+      "raw": 240,
+      "rendered": "240",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "seed",
+      "raw": 42,
+      "rendered": "42",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.correct_restraint.count",
+      "raw": 175,
+      "rendered": "175",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.correct_restraint.count / 749",
+      "raw": 0.2336448598130841,
+      "rendered": "23.4%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.correct_walkaway.count",
+      "raw": 289,
+      "rendered": "289",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.correct_walkaway.count / 749",
+      "raw": 0.38584779706275035,
+      "rendered": "38.6%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.missed_opportunity.count",
+      "raw": 285,
+      "rendered": "285",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.abstained_buckets.missed_opportunity.count / 749",
+      "raw": 0.38050734312416556,
+      "rendered": "38.1%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.n_acted",
+      "raw": 702,
+      "rendered": "702",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.n_acted / 749",
+      "raw": 0.9372496662216289,
+      "rendered": "93.7%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.recovery_rate",
+      "raw": 0.233645,
+      "rendered": "23.4%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.net_uplift_pp",
+      "raw": 0.0,
+      "rendered": "+0.0",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.total_attempts",
+      "raw": 0,
+      "rendered": "0",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[do_nothing].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 0.0,
+      "rendered": "0",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.decision_quality.precision",
+      "raw": 0.207977,
+      "rendered": "20.8%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.decision_quality.f1",
+      "raw": 0.342321,
+      "rendered": "34.2%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.cost_per_incremental_rupee",
+      "raw": 0.1169,
+      "rendered": "0.117",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.recovery_rate",
+      "raw": 0.389853,
+      "rendered": "39.0%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.net_uplift_pp",
+      "raw": 15.6208,
+      "rendered": "+15.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.total_attempts",
+      "raw": 1430,
+      "rendered": "1,430",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[naive_retry_3x].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 41010.4,
+      "rendered": "41,010",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.decision_quality.precision",
+      "raw": 0.309836,
+      "rendered": "31.0%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.decision_quality.f1",
+      "raw": 0.452153,
+      "rendered": "45.2%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.cost_per_incremental_rupee",
+      "raw": 0.043,
+      "rendered": "0.043",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.recovery_rate",
+      "raw": 0.479306,
+      "rendered": "47.9%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.net_uplift_pp",
+      "raw": 24.5661,
+      "rendered": "+24.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.total_attempts",
+      "raw": 568,
+      "rendered": "568",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[rules_only].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 30812.6,
+      "rendered": "30,813",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.decision_quality.precision",
+      "raw": 0.28223,
+      "rendered": "28.2%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.decision_quality.f1",
+      "raw": 0.30566,
+      "rendered": "30.6%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.cost_per_incremental_rupee",
+      "raw": 0.0443,
+      "rendered": "0.044",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.recovery_rate",
+      "raw": 0.329773,
+      "rendered": "33.0%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.net_uplift_pp",
+      "raw": 9.6128,
+      "rendered": "+9.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.total_attempts",
+      "raw": 513,
+      "rendered": "513",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (naive plan)].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 14917.2,
+      "rendered": "14,917",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.decision_quality.precision",
+      "raw": 0.32381,
+      "rendered": "32.4%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.decision_quality.f1",
+      "raw": 0.448549,
+      "rendered": "44.9%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.cost_per_incremental_rupee",
+      "raw": 0.0241,
+      "rendered": "0.024",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.recovery_rate",
+      "raw": 0.453939,
+      "rendered": "45.4%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.net_uplift_pp",
+      "raw": 22.0294,
+      "rendered": "+22.0",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.total_attempts",
+      "raw": 515,
+      "rendered": "515",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[retry_economist (prior)].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 17017.6,
+      "rendered": "17,018",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.decision_quality.precision",
+      "raw": 1.0,
+      "rendered": "100.0%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.decision_quality.f1",
+      "raw": 1.0,
+      "rendered": "100.0%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.cost_per_incremental_rupee",
+      "raw": 0.0166,
+      "rendered": "0.017",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.recovery_rate",
+      "raw": 0.614152,
+      "rendered": "61.4%",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.net_uplift_pp",
+      "raw": 38.0507,
+      "rendered": "+38.1",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.total_attempts",
+      "raw": 240,
+      "rendered": "240",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "policies[oracle_best (CHEATS)].metrics.total_cost_rupees + annoyance_cost_rupees",
+      "raw": 16612.2,
+      "rendered": "16,612",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.point",
+      "raw": 8.94526,
+      "rendered": "+8.9",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.low",
+      "raw": 5.722071,
+      "rendered": "+5.7",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].net_uplift_pp_delta.high",
+      "raw": 12.5,
+      "rendered": "+12.5",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.point",
+      "raw": 0.109832,
+      "rendered": "+0.110",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.low",
+      "raw": 0.067231,
+      "rendered": "+0.067",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs naive_retry_3x].decision_f1_delta.high",
+      "raw": 0.154196,
+      "rendered": "+0.154",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.point",
+      "raw": 24.566088,
+      "rendered": "+24.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.low",
+      "raw": 21.614227,
+      "rendered": "+21.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].net_uplift_pp_delta.high",
+      "raw": 27.741083,
+      "rendered": "+27.7",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].decision_f1_delta.point",
+      "raw": 0.452153,
+      "rendered": "+0.452",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].decision_f1_delta.low",
+      "raw": 0.413873,
+      "rendered": "+0.414",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[rules_only vs do_nothing].decision_f1_delta.high",
+      "raw": 0.492027,
+      "rendered": "+0.492",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.point",
+      "raw": -2.536716,
+      "rendered": "-2.5",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.low",
+      "raw": -3.631647,
+      "rendered": "-3.6",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].net_uplift_pp_delta.high",
+      "raw": -1.523546,
+      "rendered": "-1.5",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.point",
+      "raw": -0.003604,
+      "rendered": "-0.004",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.low",
+      "raw": -0.022225,
+      "rendered": "-0.022",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs rules_only].decision_f1_delta.high",
+      "raw": 0.014519,
+      "rendered": "+0.015",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.point",
+      "raw": 6.408545,
+      "rendered": "+6.4",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.low",
+      "raw": 3.250975,
+      "rendered": "+3.3",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].net_uplift_pp_delta.high",
+      "raw": 9.795918,
+      "rendered": "+9.8",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.point",
+      "raw": 0.106228,
+      "rendered": "+0.106",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.low",
+      "raw": 0.061953,
+      "rendered": "+0.062",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (prior) vs naive_retry_3x].decision_f1_delta.high",
+      "raw": 0.153679,
+      "rendered": "+0.154",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.point",
+      "raw": -6.008011,
+      "rendered": "-6.0",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.low",
+      "raw": -8.528198,
+      "rendered": "-8.5",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].net_uplift_pp_delta.high",
+      "raw": -3.663501,
+      "rendered": "-3.7",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.point",
+      "raw": -0.036661,
+      "rendered": "-0.037",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.low",
+      "raw": -0.075409,
+      "rendered": "-0.075",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "paired_comparisons[retry_economist (naive plan) vs naive_retry_3x].decision_f1_delta.high",
+      "raw": 0.002003,
+      "rendered": "+0.002",
+      "source": "results/holdout_scoreboard.json"
+    },
+    {
+      "path": "hard_decline_retry_waste[naive_retry_3x]",
+      "raw": 245,
+      "rendered": "245",
+      "source": "results/veto_precision_naive_plan.md"
+    },
+    {
+      "path": "hard_decline_retry_waste[retry_economist (naive plan)]",
+      "raw": 0,
+      "rendered": "0",
+      "source": "results/veto_precision_naive_plan.md"
+    },
+    {
+      "path": "veto precision / compliance-driven (C1-C5)",
+      "raw": "98.2%",
+      "rendered": "98.2%",
+      "source": "results/veto_precision_naive_plan.md"
+    },
+    {
+      "path": "veto precision / economics-driven (EV<=0)",
+      "raw": "59.9%",
+      "rendered": "59.9%",
+      "source": "results/veto_precision_naive_plan.md"
+    },
+    {
+      "path": "veto precision / all vetoes",
+      "raw": "71.4%",
+      "rendered": "71.4%",
+      "source": "results/veto_precision_naive_plan.md"
+    },
+    {
+      "path": "pay_01921 signals.issuer_health_now.multiple_over_baseline",
+      "raw": 25.47,
+      "rendered": "25.47x",
+      "source": "data/llm_cache"
+    },
+    {
+      "path": "pay_01921 signals.issuer_health_now.failures_in_window",
+      "raw": 23,
+      "rendered": "23",
+      "source": "data/llm_cache"
+    },
+    {
+      "path": "pay_01921 signals.issuer_health_now.confidence",
+      "raw": 0.9,
+      "rendered": "0.9",
+      "source": "data/llm_cache"
+    },
+    {
+      "path": "pay_00861 [LLM plan] proposal.p_recover_if_act",
+      "raw": 0.65,
+      "rendered": "0.65",
+      "source": "results/audit_ledger.jsonl"
+    },
+    {
+      "path": "pay_00861 [LLM plan] ev.p_recover_if_act",
+      "raw": 0.472973,
+      "rendered": "0.47",
+      "source": "results/audit_ledger.jsonl"
+    },
+    {
+      "path": "n_transactions",
+      "raw": 47,
+      "rendered": "47",
+      "source": "results/subsample_scoreboard.json"
+    }
+  ],
+  "note": "Every figure rendered inside <span class='num'> on demo.html, with the committed file and path it was read from. Regenerate with scripts/build_demo_html.py."
+}
