@@ -1,2 +1,13 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Generated artefacts are written with explicit LF by their builders, and their
+# byte-identity is asserted by the test suite. Checking them out as CRLF on
+# Windows would make the committed file differ from what the builder produces,
+# so line endings are pinned for these.
+results/demo.html eol=lf
+results/demo_sources.json eol=lf
+results/*.jsonl eol=lf
+data/generated/* eol=lf
+data/llm_cache/* eol=lf
+
