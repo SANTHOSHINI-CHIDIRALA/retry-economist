@@ -1,5 +1,7 @@
 # retry-economist
 
+**Demo video:** https://youtu.be/546K-NPIYxw
+
 Failed-payment recovery agent that treats every retry as a purchase decision: an LLM proposes what to do about a failed payment, and an economist layer prices the proposal against expected value and five hard compliance rules before anything is authorised. Razorpay AI Buildathon, Track 03 (AI Revenue Recovery).
 
 > **Recovered 45.4% vs 39.0% for naive retry, using 64% fewer retry attempts and one-sixth the cost per rupee recovered.**
